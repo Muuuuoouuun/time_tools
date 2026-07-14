@@ -3,8 +3,9 @@ import { TOOL_TITLES } from '../labels';
 import { fmtClock, examCalc, nowSec, pad, type ExamState } from '../state';
 import type { Ctx, View } from '../view';
 
-interface PillMeta { l: string; c: string; bg: string; bd: string; }
-const PILL_META: Record<ExamState, PillMeta> = {
+export interface PillMeta { l: string; c: string; bg: string; bd: string; }
+// Shared by the header pill and the 교시 view header card (prototype line 440).
+export const PILL_META: Record<ExamState, PillMeta> = {
   active: { l: '진행 중', c: 'var(--accent)', bg: 'var(--accent-soft)', bd: 'var(--accent)' },
   break: { l: '쉬는 시간', c: 'var(--text)', bg: 'var(--surface)', bd: 'var(--border)' },
   wait: { l: '시작 전', c: 'var(--muted)', bg: 'var(--surface)', bd: 'var(--border)' },
