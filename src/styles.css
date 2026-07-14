@@ -1,0 +1,65 @@
+/* Self-hosted fonts (no CDN — works on locked-down classroom networks & offline) */
+@import '@fontsource/sora/300.css';
+@import '@fontsource/sora/400.css';
+@import '@fontsource/sora/500.css';
+@import '@fontsource/sora/600.css';
+@import '@fontsource/sora/700.css';
+@import '@fontsource-variable/jetbrains-mono';
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--bg);
+  font-family: 'Sora', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+:root {
+  --bg:#0a0a0c; --bg-2:#0e0e11; --panel:#141419; --surface:#1b1b21; --surface-2:#232329;
+  --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.15);
+  --text:#f2f0ea; --muted:rgba(242,240,234,.56); --faint:rgba(242,240,234,.32);
+  --accent:#e0a34e; --accent-soft:rgba(224,163,78,.15); --on-accent:#141210;
+  --danger:#e8695b; --track:rgba(255,255,255,.08); --glow:.6;
+}
+[data-theme="light"] {
+  --bg:#eceae3; --bg-2:#f1efe9; --panel:#ffffff; --surface:#f5f3ec; --surface-2:#ebe9e1;
+  --border:rgba(0,0,0,.09); --border-2:rgba(0,0,0,.16);
+  --text:#1c1a17; --muted:rgba(28,26,23,.56); --faint:rgba(28,26,23,.34);
+  --accent:#c07f2a; --accent-soft:rgba(192,127,42,.13); --on-accent:#ffffff;
+  --danger:#c8503f; --track:rgba(0,0,0,.07); --glow:0;
+}
+
+input, select, button { font-family: inherit; color: inherit; }
+input[type=range] { accent-color: var(--accent); }
+::selection { background: var(--accent-soft); }
+.mono { font-family: 'JetBrains Mono Variable', 'JetBrains Mono', monospace; }
+
+.sc::-webkit-scrollbar { width: 8px; height: 8px; }
+.sc::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+.sc::-webkit-scrollbar-track { background: transparent; }
+
+@keyframes glowpulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+@keyframes flashkf   { 0%,100%{opacity:0} 50%{opacity:.3} }
+@keyframes dotpulse  { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+/*
+  Hover / focus utilities — replicate the prototype's inline `style-hover` / `style-focus`.
+  Inline styles win specificity over class selectors, so these must be !important to
+  override the base inline style on hover/focus (matching the prototype exactly).
+*/
+.h-text:hover          { color: var(--text) !important; }
+.h-text-bd2:hover      { color: var(--text) !important; border-color: var(--border-2) !important; }
+.h-surface:hover       { background: var(--surface) !important; }
+.h-bd2:hover           { border-color: var(--border-2) !important; }
+.h-accent-bd:hover     { border-color: var(--accent) !important; }
+.h-text-accent-bd:hover{ color: var(--text) !important; border-color: var(--accent) !important; }
+.h-text-accent:hover   { color: var(--text) !important; border-color: var(--accent) !important; }
+.h-bright:hover        { filter: brightness(1.07); }
+.h-bright6:hover       { filter: brightness(1.06); }
+.h-bright10:hover      { filter: brightness(1.1); }
+.h-danger:hover        { color: var(--danger) !important; }
+.h-op:hover            { opacity: .82; }
+
+.f-surface:focus       { background: var(--surface) !important; }
+.f-surface2:focus      { background: var(--surface-2) !important; }
+.f-accent-bd:focus     { border-color: var(--accent) !important; }

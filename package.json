@@ -1,0 +1,22 @@
+{
+  "name": "timetools",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "교실 타이머 — Classroom timer suite (Timer / Stopwatch / Clock / 교시 Schedule / Pomodoro)",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.0.0",
+    "@fontsource/sora": "^5.0.0",
+    "jsdom": "^25.0.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}
