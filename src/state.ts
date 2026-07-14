@@ -80,6 +80,11 @@ export const BUILTIN_SOUNDS: SoundDef[] = [
   { id: 'soft', label: '자연음' },
 ];
 
+/** Selectable sounds, including the uploaded custom one when present. */
+export function soundOptions(customName: string | null): SoundDef[] {
+  return customName ? [...BUILTIN_SOUNDS, { id: 'custom', label: '내 사운드' }] : BUILTIN_SOUNDS;
+}
+
 export interface Zone { city: string; tz: string; }
 export const WORLD_ZONES: Zone[] = [
   { city: '뉴욕', tz: 'America/New_York' },
