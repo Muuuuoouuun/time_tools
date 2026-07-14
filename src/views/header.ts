@@ -35,7 +35,7 @@ export function createHeader(): View {
     root.setAttribute('style', 'display:flex;align-items:center;justify-content:space-between;padding:20px 30px;border-bottom:1px solid var(--border);flex:none');
     root.replaceChildren();
 
-    titleEl = el('div', { style: 'font-size:19px;font-weight:600;letter-spacing:-.01em' });
+    titleEl = el('div', { style: 'font-size:19px;font-weight:600;letter-spacing:-.01em;white-space:nowrap' });
     subEl = el('div', { style: 'font-size:12.5px;color:var(--muted);margin-top:2px' });
     const left = el('div', {}, [titleEl, subEl]);
 
