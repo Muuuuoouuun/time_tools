@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);font-family:'Sora',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  :root{
+    --bg:#0a0a0c;--bg-2:#0e0e11;--panel:#141419;--surface:#1b1b21;--surface-2:#232329;
+    --border:rgba(255,255,255,.08);--border-2:rgba(255,255,255,.15);
+    --text:#f2f0ea;--muted:rgba(242,240,234,.56);--faint:rgba(242,240,234,.32);
+    --accent:#e0a34e;--accent-soft:rgba(224,163,78,.15);--on-accent:#141210;
+    --danger:#e8695b;--track:rgba(255,255,255,.08);--glow:.6;
+  }
+  [data-theme="light"]{
+    --bg:#eceae3;--bg-2:#f1efe9;--panel:#ffffff;--surface:#f5f3ec;--surface-2:#ebe9e1;
+    --border:rgba(0,0,0,.09);--border-2:rgba(0,0,0,.16);
+    --text:#1c1a17;--muted:rgba(28,26,23,.56);--faint:rgba(28,26,23,.34);
+    --accent:#c07f2a;--accent-soft:rgba(192,127,42,.13);--on-accent:#ffffff;
+    --danger:#c8503f;--track:rgba(0,0,0,.07);--glow:0;
+  }
+  input,select,button{font-family:inherit;color:inherit}
+  input[type=range]{accent-color:var(--accent)}
+  a{color:var(--accent);text-decoration:none}a:hover{opacity:.82}
+  ::selection{background:var(--accent-soft)}
+  .mono{font-family:'JetBrains Mono',monospace}
+  .sc::-webkit-scrollbar{width:8px;height:8px}
+  .sc::-webkit-scrollbar-thumb{background:var(--border-2);border-radius:4px}
+  .sc::-webkit-scrollbar-track{background:transparent}
+  @keyframes glowpulse{0%,100%{opacity:1}50%{opacity:.55}}
+  @keyframes flashkf{0%,100%{opacity:0}50%{opacity:.3}}
+  @keyframes dotpulse{0%,100%{opacity:1}50%{opacity:.35}}
+</style>
+</helmet>
+<div data-theme="{{ theme }}" style="position:fixed;inset:0;display:flex;background:var(--bg);color:var(--text);font-family:'Sora',system-ui,sans-serif;overflow:hidden">
+
+  <sc-if value="{{ flashing }}"><div style="position:absolute;inset:0;background:var(--danger);animation:flashkf .9s ease-in-out infinite;pointer-events:none;z-index:60"></div></sc-if>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside style="width:{{ sideW }};flex:none;background:var(--bg-2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:22px 0;transition:width .18s ease">
+    <div style="display:flex;align-items:center;gap:10px;justify-content:{{ brandJustify }};padding:{{ brandPad }}">
+      <span style="width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);flex:none"></span>
+      <sc-if value="{{ navExpanded }}"><span style="font-size:15px;font-weight:600;letter-spacing:-.01em;line-height:1.15;flex:1">교실 타이머<br><span style="font-size:11px;font-weight:400;color:var(--faint)">Classroom Suite</span></span></sc-if>
+      <sc-if value="{{ showCollapseBtn }}"><button onClick="{{ onToggleNav }}" title="접기" style="width:26px;height:26px;border-radius:8px;background:transparent;border:none;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="color:var(--text)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg></button></sc-if>
+    </div>
+    <sc-if value="{{ showExpandBtn }}"><button onClick="{{ onToggleNav }}" title="펼치기" style="margin:0 auto 12px;width:32px;height:32px;border-radius:9px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l5 5-5 5"/></svg></button></sc-if>
+    <nav style="display:flex;flex-direction:column;gap:2px;padding:0 12px;flex:1">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+        <button onClick="{{ n.onClick }}" title="{{ n.label }}" style="position:relative;display:flex;align-items:center;gap:12px;justify-content:{{ navJustify }};padding:{{ navBtnPad }};border:none;background:{{ n.bg }};border-radius:12px;color:{{ n.color }};font-size:13.5px;font-weight:{{ n.weight }};cursor:pointer;text-align:left" style-hover="background:var(--surface)">
+          <span style="display:flex">{{ n.icon }}</span>
+          <sc-if value="{{ navExpanded }}"><span style="flex:1">{{ n.label }}</span></sc-if>
+          <sc-if value="{{ n.badgeShow }}"><span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:20px" class="mono">{{ n.badge }}</span></sc-if>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="padding:14px 12px 0;border-top:1px solid var(--border);margin:8px 12px 0;display:flex;gap:8px;flex-direction:{{ footDir }}">
+      <button onClick="{{ onToggleTheme }}" title="테마 전환" style="flex:{{ footBtnFlex }};display:flex;align-items:center;justify-content:center;gap:7px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:12px;font-weight:500;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)">
+        <sc-if value="{{ isDark }}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="8" cy="8" r="3.3"/><path d="M8 1.5v1.6M8 12.9v1.6M14.5 8h-1.6M3.1 8H1.5M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1M12.6 12.6l-1.1-1.1M4.5 4.5L3.4 3.4"/></svg></sc-if>
+        <sc-if value="{{ isLight }}"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 9.5A5.5 5.5 0 0 1 6.5 3a5.5 5.5 0 1 0 6.5 6.5z"/></svg></sc-if>
+        <sc-if value="{{ navExpanded }}"><span>{{ themeLabel }}</span></sc-if>
+      </button>
+      <button onClick="{{ onToggleSettings }}" title="알림 설정" style="width:{{ settingsW }};display:flex;align-items:center;justify-content:center;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:11px;color:var(--muted);cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2.5 5h11"/><circle cx="6" cy="5" r="1.7" fill="var(--bg-2)"/><path d="M2.5 11h11"/><circle cx="10.5" cy="11" r="1.7" fill="var(--bg-2)"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main style="flex:1;display:flex;flex-direction:column;min-width:0">
+    <!-- topbar -->
+    <header style="display:flex;align-items:center;justify-content:space-between;padding:20px 30px;border-bottom:1px solid var(--border);flex:none">
+      <div>
+        <div style="font-size:19px;font-weight:600;letter-spacing:-.01em">{{ toolTitle }}</div>
+        <sc-if value="{{ showSub }}"><div style="font-size:12.5px;color:var(--muted);margin-top:2px">{{ toolSub }}</div></sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:16px">
+        <sc-if value="{{ showPill }}"><div style="display:inline-flex;align-items:center;gap:8px;padding:7px 13px;background:{{ examPill.bg }};border:1px solid {{ examPill.border }};border-radius:22px">
+          <span style="width:7px;height:7px;border-radius:50%;background:{{ examPill.dot }}"></span>
+          <span style="font-size:12px;font-weight:500;color:{{ examPill.color }}">{{ examPill.text }}</span>
+        </div></sc-if>
+        <div class="mono" style="font-size:22px;font-weight:300;letter-spacing:.02em">{{ clockHHMM }}<span style="color:var(--faint);font-size:15px">:{{ clockSS }}</span></div>
+      </div>
+    </header>
+
+    <div class="sc" style="flex:1;overflow-y:auto;padding:28px 30px 40px">
+
+      <!-- ============ TIMER ============ -->
+      <sc-if value="{{ isTimer }}">
+        <div style="display:flex;flex-direction:column;align-items:center;max-width:960px;margin:0 auto">
+          <!-- focused hero -->
+          <div style="display:flex;flex-direction:column;align-items:center;padding:6px 0 8px">
+            <input key="{{ hero.id }}" value="{{ hero.name }}" onChange="{{ hero.onName }}" placeholder="타이머 이름" style="text-align:center;background:transparent;border:none;outline:none;font-size:15px;font-weight:500;color:var(--text);padding:6px 10px;border-radius:9px;width:240px;margin-bottom:8px" style-focus="background:var(--surface)">
+            <div style="position:relative;width:270px;height:270px;display:flex;align-items:center;justify-content:center">
+              <svg width="270" height="270" viewBox="0 0 270 270" style="position:absolute;transform:rotate(-90deg)"><circle cx="135" cy="135" r="124" fill="none" stroke="var(--track)" stroke-width="7"/><circle cx="135" cy="135" r="124" fill="none" stroke="{{ hero.color }}" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{ hero.circ }}" stroke-dashoffset="{{ hero.dash }}" style="transition:stroke-dashoffset .25s linear"/></svg>
+              <div style="display:flex;flex-direction:column;align-items:center;gap:9px">
+                <span class="mono" style="font-size:58px;font-weight:200;letter-spacing:.01em;line-height:1">{{ hero.display }}</span>
+                <span style="font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:{{ hero.statusColor }}">{{ hero.statusLabel }}</span>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:16px;margin-top:14px">
+              <button onClick="{{ hero.onReset }}" title="초기화" style="width:48px;height:48px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg></button>
+              <button onClick="{{ hero.onToggle }}" style="width:72px;height:72px;border-radius:24px;background:{{ hero.btnBg }};border:none;color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 30px -10px {{ hero.color }}" style-hover="filter:brightness(1.07)">
+                <sc-if value="{{ hero.running }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="6" width="3.4" height="12" rx="1.2"/><rect x="13.6" y="6" width="3.4" height="12" rx="1.2"/></svg></sc-if>
+                <sc-if value="{{ hero.idle }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></sc-if>
+                <sc-if value="{{ hero.done }}"><svg width="25" height="25" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg></sc-if>
+              </button>
+              <button onClick="{{ hero.onPlus }}" title="+1분" style="width:48px;height:48px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:600" style-hover="color:var(--text);border-color:var(--border-2)">+1분</button>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:20px">
+              <sc-for list="{{ hero.presets }}" as="p" hint-placeholder-count="6"><button onClick="{{ p.on }}" style="padding:7px 14px;border-radius:11px;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.color }};font-size:12.5px;font-weight:500;cursor:pointer" style-hover="border-color:var(--border-2)">{{ p.label }}</button></sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:16px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6v4h2.5L9 13V3L5.5 6H3z"/><path d="M11.5 6.2a2.6 2.6 0 0 1 0 3.6"/></svg>
+              <span style="font-size:12px;color:var(--muted)">알림음</span>
+              <select value="{{ hero.sound }}" onChange="{{ hero.onSound }}" style="background:transparent;border:none;outline:none;font-size:12.5px;color:var(--text);cursor:pointer;font-weight:500"><sc-for list="{{ soundOptions }}" as="s" hint-placeholder-count="5"><option value="{{ s.id }}">{{ s.label }}</option></sc-for></select>
+            </div>
+          </div>
+
+          <!-- grid -->
+          <div style="width:100%;margin-top:34px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <span style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)">모든 타이머 · 그룹별</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px">
+              <sc-for list="{{ timers }}" as="t" hint-placeholder-count="3">
+                <div onClick="{{ t.onFocus }}" style="background:{{ t.cardBg }};border:1px solid {{ t.cardBorder }};border-radius:16px;padding:14px;cursor:pointer">
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+                    <span style="width:8px;height:8px;border-radius:50%;background:{{ t.color }};flex:none"></span>
+                    <input value="{{ t.name }}" onChange="{{ t.onName }}" onClick="{{ stop }}" placeholder="이름" style="flex:1;min-width:0;background:transparent;border:none;outline:none;font-size:13px;font-weight:500;color:var(--text);padding:2px 4px;border-radius:6px" style-focus="background:var(--surface-2)">
+                    <button onClick="{{ t.onDelete }}" title="삭제" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="color:var(--danger)"><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+                  </div>
+                  <div class="mono" style="font-size:34px;font-weight:200;letter-spacing:.01em;color:{{ t.digitColor }};margin-bottom:12px">{{ t.display }}</div>
+                  <div style="height:4px;background:var(--track);border-radius:2px;margin-bottom:13px;overflow:hidden"><div style="height:100%;width:{{ t.pct }};background:{{ t.color }};border-radius:2px;transition:width .25s linear"></div></div>
+                  <div style="display:flex;gap:7px">
+                    <button onClick="{{ t.onToggleStop }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:10px;background:{{ t.btnBg }};border:1px solid {{ t.btnBorder }};color:{{ t.btnColor }};font-size:12px;font-weight:500;cursor:pointer" style-hover="filter:brightness(1.06)">
+                      <sc-if value="{{ t.running }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="6" width="3.4" height="12" rx="1.2"/><rect x="13.6" y="6" width="3.4" height="12" rx="1.2"/></svg>일시정지</sc-if>
+                      <sc-if value="{{ t.idle }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>시작</sc-if>
+                      <sc-if value="{{ t.done }}"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg>다시</sc-if>
+                    </button>
+                    <button onClick="{{ t.onResetStop }}" title="초기화" style="width:40px;display:flex;align-items:center;justify-content:center;padding:9px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);color:var(--muted);cursor:pointer" style-hover="color:var(--text)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg></button>
+                  </div>
+                </div>
+              </sc-for>
+              <button onClick="{{ onAddTimer }}" style="min-height:158px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:transparent;border:1px dashed var(--border-2);border-radius:16px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer" style-hover="color:var(--text);border-color:var(--accent)"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>타이머 추가</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ STOPWATCH ============ -->
+      <sc-if value="{{ isStopwatch }}">
+        <div style="display:flex;flex-direction:column;align-items:center;max-width:520px;margin:0 auto;padding-top:24px">
+          <div style="display:flex;align-items:baseline;font-weight:200;color:var(--text)" class="mono"><span style="font-size:74px;letter-spacing:.01em">{{ sw.main }}</span><span style="font-size:34px;color:var(--muted);width:62px;text-align:left;padding-left:6px">.{{ sw.cs }}</span></div>
+          <span style="font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:{{ sw.statusColor }};margin-top:8px">{{ sw.statusLabel }}</span>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:28px">
+            <button onClick="{{ sw.onLap }}" title="랩" style="width:52px;height:52px;border-radius:17px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)"><svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v12"/><path d="M4 3h7.5l-1.6 2.4L11.5 8H4"/></svg></button>
+            <button onClick="{{ sw.onToggle }}" style="width:76px;height:76px;border-radius:25px;background:var(--accent);border:none;color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 30px -10px var(--accent)" style-hover="filter:brightness(1.07)"><sc-if value="{{ sw.running }}"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="6" width="3.4" height="12" rx="1.2"/><rect x="13.6" y="6" width="3.4" height="12" rx="1.2"/></svg></sc-if><sc-if value="{{ sw.notRunning }}"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></sc-if></button>
+            <button onClick="{{ sw.onReset }}" title="초기화" style="width:52px;height:52px;border-radius:17px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)"><svg width="19" height="19" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg></button>
+          </div>
+          <div style="width:100%;margin-top:26px;display:flex;flex-direction:column">
+            <sc-for list="{{ sw.laps }}" as="l" hint-placeholder-count="0"><div style="display:flex;align-items:center;justify-content:space-between;padding:11px 8px;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--muted);letter-spacing:.04em">랩 {{ l.n }}</span><span class="mono" style="font-size:13.5px;color:var(--muted)">+{{ l.split }}</span><span class="mono" style="font-size:14px;color:var(--text);font-weight:300">{{ l.total }}</span></div></sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ CLOCK ============ -->
+      <sc-if value="{{ isClock }}">
+        <div style="display:flex;flex-direction:column;align-items:center;max-width:560px;margin:0 auto;padding-top:30px">
+          <span style="font-size:14px;font-weight:500;color:var(--muted)">{{ clockDate }} {{ clockWeekday }}</span>
+          <div style="display:flex;align-items:baseline;font-weight:200;color:var(--text);margin-top:12px" class="mono"><span style="font-size:96px;letter-spacing:.01em;line-height:1">{{ clockHHMM }}</span><span style="font-size:36px;color:var(--accent);width:62px;text-align:left;padding-left:8px">{{ clockSS }}</span></div>
+          <div style="width:100%;margin-top:44px"><span style="font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--faint)">세계 시각</span>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+              <sc-for list="{{ worldClocks }}" as="w" hint-placeholder-count="4"><div style="display:flex;align-items:center;justify-content:space-between;padding:15px 17px;background:var(--surface);border:1px solid var(--border);border-radius:14px"><div><div style="font-size:13.5px;font-weight:500">{{ w.city }}</div><div style="font-size:11px;color:var(--faint);margin-top:2px">{{ w.diff }}</div></div><span class="mono" style="font-size:22px;font-weight:300;letter-spacing:.02em">{{ w.time }}</span></div></sc-for>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ EXAM ============ -->
+      <sc-if value="{{ isExam }}">
+        <div style="max-width:620px;margin:0 auto">
+          <div style="padding:22px;background:{{ exam.headBg }};border:1px solid {{ exam.headBorder }};border-radius:20px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:{{ exam.stateColor }}">{{ exam.stateLabel }}</span><span style="font-size:12.5px;color:var(--muted)">현재 {{ clockHHMM }}</span></div>
+            <div style="font-size:28px;font-weight:600;letter-spacing:-.01em;margin-top:10px">{{ exam.title }}</div>
+            <sc-if value="{{ exam.hasRemain }}"><div style="display:flex;align-items:baseline;gap:9px;margin-top:8px"><span class="mono" style="font-size:40px;font-weight:200;color:{{ exam.stateColor }}">{{ exam.remain }}</span><span style="font-size:12.5px;color:var(--muted)">{{ exam.remainLabel }}</span></div><div style="height:6px;border-radius:3px;background:var(--track);margin-top:14px;overflow:hidden"><div style="height:100%;width:{{ exam.pct }};background:{{ exam.stateColor }};border-radius:3px;transition:width .3s linear"></div></div></sc-if>
+            <sc-if value="{{ exam.subOnly }}"><div style="font-size:13px;color:var(--muted);margin-top:8px">{{ exam.sub }}</div></sc-if>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <sc-for list="{{ exam.periods }}" as="p" hint-placeholder-count="4">
+              <sc-if value="{{ exam.viewMode }}"><div style="display:flex;align-items:center;gap:13px;padding:14px 16px;background:{{ p.bg }};border:1px solid {{ p.border }};border-radius:14px"><span style="width:9px;height:9px;border-radius:50%;background:{{ p.dot }};flex:none"></span><span style="flex:1;font-size:14px;font-weight:500;color:{{ p.nameColor }}">{{ p.name }}</span><span class="mono" style="font-size:13.5px;color:{{ p.timeColor }};letter-spacing:.02em">{{ p.range }}</span><span style="font-size:11.5px;color:var(--faint);width:42px;text-align:right">{{ p.dur }}</span></div></sc-if>
+              <sc-if value="{{ exam.editMode }}"><div style="display:flex;align-items:center;gap:9px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:14px"><input value="{{ p.name }}" onChange="{{ p.onName }}" style="flex:1;min-width:0;background:var(--surface-2);border:1px solid var(--border);outline:none;font-size:13.5px;color:var(--text);padding:8px 10px;border-radius:9px" style-focus="border-color:var(--accent)"><input type="time" value="{{ p.start }}" onChange="{{ p.onStart }}" class="mono" style="background:var(--surface-2);border:1px solid var(--border);outline:none;font-size:12.5px;color:var(--text);padding:7px 8px;border-radius:9px" style-focus="border-color:var(--accent)"><input type="time" value="{{ p.end }}" onChange="{{ p.onEnd }}" class="mono" style="background:var(--surface-2);border:1px solid var(--border);outline:none;font-size:12.5px;color:var(--text);padding:7px 8px;border-radius:9px" style-focus="border-color:var(--accent)"><button onClick="{{ p.onDelete }}" style="width:30px;height:32px;border-radius:9px;background:transparent;border:none;color:var(--faint);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none" style-hover="color:var(--danger)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div></sc-if>
+            </sc-for>
+          </div>
+          <div style="display:flex;gap:9px;margin-top:16px">
+            <sc-if value="{{ exam.viewMode }}"><button onClick="{{ exam.onEdit }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:var(--border-2)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"/></svg>편집</button><button onClick="{{ exam.onLoadSuneung }}" style="flex:1;padding:12px;background:var(--accent-soft);border:1px solid var(--border);border-radius:13px;color:var(--accent);font-size:13px;font-weight:600;cursor:pointer" style-hover="filter:brightness(1.1)">수능 시간표 불러오기</button></sc-if>
+            <sc-if value="{{ exam.editMode }}"><button onClick="{{ exam.onAdd }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:13px;color:var(--text);font-size:13px;font-weight:500;cursor:pointer" style-hover="border-color:var(--border-2)"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3.5v9M3.5 8h9"/></svg>교시 추가</button><button onClick="{{ exam.onEdit }}" style="flex:1;padding:12px;background:var(--accent);border:none;border-radius:13px;color:var(--on-accent);font-size:13px;font-weight:600;cursor:pointer" style-hover="filter:brightness(1.06)">완료</button></sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ============ POMODORO ============ -->
+      <sc-if value="{{ isPomo }}">
+        <div style="display:flex;flex-direction:column;align-items:center;max-width:560px;margin:0 auto;padding-top:14px">
+          <div style="display:inline-flex;padding:4px;background:var(--surface);border:1px solid var(--border);border-radius:22px;margin-bottom:22px">
+            <span style="padding:6px 16px;border-radius:18px;background:{{ pomo.focusChip }};font-size:12.5px;font-weight:500;color:{{ pomo.focusChipColor }}">집중</span>
+            <span style="padding:6px 16px;border-radius:18px;background:{{ pomo.breakChip }};font-size:12.5px;font-weight:500;color:{{ pomo.breakChipColor }}">휴식</span>
+          </div>
+          <div style="position:relative;width:270px;height:270px;display:flex;align-items:center;justify-content:center">
+            <svg width="270" height="270" viewBox="0 0 270 270" style="position:absolute;transform:rotate(-90deg)"><circle cx="135" cy="135" r="124" fill="none" stroke="var(--track)" stroke-width="7"/><circle cx="135" cy="135" r="124" fill="none" stroke="{{ pomo.color }}" stroke-width="7" stroke-linecap="round" stroke-dasharray="{{ pomo.circ }}" stroke-dashoffset="{{ pomo.dash }}" style="transition:stroke-dashoffset .25s linear"/></svg>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:9px">
+              <span class="mono" style="font-size:58px;font-weight:200;line-height:1">{{ pomo.display }}</span>
+              <span style="font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:{{ pomo.color }}">{{ pomo.phaseLabel }}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:18px">
+            <sc-for list="{{ pomo.dots }}" as="d" hint-placeholder-count="4"><span style="width:11px;height:11px;border-radius:50%;background:{{ d.bg }}"></span></sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;margin-top:22px">
+            <button onClick="{{ pomo.onReset }}" title="초기화" style="width:48px;height:48px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 8A5 5 0 1 1 11.5 4.5"/><path d="M13 2.5V5.2h-2.7"/></svg></button>
+            <button onClick="{{ pomo.onToggle }}" style="width:72px;height:72px;border-radius:24px;background:{{ pomo.color }};border:none;color:var(--on-accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 12px 30px -10px {{ pomo.color }}" style-hover="filter:brightness(1.07)"><sc-if value="{{ pomo.running }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="6" width="3.4" height="12" rx="1.2"/><rect x="13.6" y="6" width="3.4" height="12" rx="1.2"/></svg></sc-if><sc-if value="{{ pomo.notRunning }}"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></sc-if></button>
+            <button onClick="{{ pomo.onSkip }}" title="건너뛰기" style="width:48px;height:48px;border-radius:16px;background:var(--surface);border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text);border-color:var(--border-2)"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3l7 5-7 5zM12 3v10"/></svg></button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:26px;width:100%">
+            <div style="flex:1;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:9px">집중 시간</div><div style="display:flex;align-items:center;justify-content:space-between"><button onClick="{{ pomo.onFocusDown }}" style="width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:14px">−</button><span class="mono" style="font-size:18px;font-weight:400">{{ pomo.focusMin }}분</span><button onClick="{{ pomo.onFocusUp }}" style="width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:14px">+</button></div></div>
+            <div style="flex:1;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:14px"><div style="font-size:11px;color:var(--muted);margin-bottom:9px">휴식 시간</div><div style="display:flex;align-items:center;justify-content:space-between"><button onClick="{{ pomo.onBreakDown }}" style="width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:14px">−</button><span class="mono" style="font-size:18px;font-weight:400">{{ pomo.breakMin }}분</span><button onClick="{{ pomo.onBreakUp }}" style="width:28px;height:28px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:14px">+</button></div></div>
+          </div>
+        </div>
+      </sc-if>
+
+    </div>
+  </main>
+
+  <!-- ===================== SETTINGS DRAWER ===================== -->
+  <sc-if value="{{ settingsOpen }}">
+    <div onClick="{{ onCloseSettings }}" style="position:absolute;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);z-index:50;display:flex;justify-content:flex-end">
+      <div onClick="{{ stop }}" class="sc" style="width:380px;height:100%;background:var(--panel);border-left:1px solid var(--border);padding:26px 26px 30px;overflow-y:auto;box-shadow:-24px 0 60px -20px rgba(0,0,0,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px"><span style="font-size:16px;font-weight:600">알림 설정</span><button onClick="{{ onCloseSettings }}" style="width:30px;height:30px;border-radius:9px;background:var(--surface);border:none;color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="color:var(--text)"><svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4l8 8M12 4l-8 8"/></svg></button></div>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)">기본 알림음</span>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 24px">
+          <sc-for list="{{ soundChips }}" as="s" hint-placeholder-count="5"><button onClick="{{ s.onSelect }}" style="display:flex;align-items:center;gap:6px;padding:9px 13px;border-radius:12px;background:{{ s.bg }};border:1px solid {{ s.border }};color:{{ s.color }};font-size:12.5px;font-weight:500;cursor:pointer"><sc-if value="{{ s.active }}"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5l3.2 3.2L13 4.5"/></svg></sc-if>{{ s.label }}</button></sc-for>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)">볼륨</span><span class="mono" style="font-size:12px;color:var(--muted)">{{ volumePct }}</span></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6v4h2.5L9 13V3L5.5 6H3z"/></svg><input type="range" min="0" max="100" value="{{ volume }}" onInput="{{ onVolume }}" style="flex:1;height:4px;cursor:pointer"><button onClick="{{ onPreview }}" style="padding:8px 13px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:12px;font-weight:500;cursor:pointer" style-hover="border-color:var(--border-2)">미리듣기</button></div>
+        <span style="font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)">커스텀 사운드</span>
+        <label style="display:flex;align-items:center;gap:10px;margin:12px 0 24px;padding:13px 15px;background:var(--surface);border:1px dashed var(--border-2);border-radius:13px;cursor:pointer" style-hover="border-color:var(--accent)"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V3M5 6l3-3 3 3"/><path d="M3 11v2h10v-2"/></svg><span style="flex:1;font-size:12.5px;color:{{ uploadColor }}">{{ uploadLabel }}</span><input type="file" accept="audio/*" onChange="{{ onUpload }}" style="display:none"></label>
+        <div onClick="{{ onToggleFlash }}" style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:14px;cursor:pointer"><div><div style="font-size:13.5px;font-weight:500">화면 깜빡임</div><div style="font-size:11.5px;color:var(--faint);margin-top:2px">종료 시 화면을 번쩍여 알림</div></div><div style="width:44px;height:25px;border-radius:13px;background:{{ flashTrack }};position:relative;flex:none;transition:.2s"><span style="position:absolute;top:3px;left:{{ flashKnob }};width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .2s"></span></div></div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180,&quot;height&quot;:760},&quot;clockFormat&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;24&quot;,&quot;12&quot;],&quot;default&quot;:&quot;24&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;시계&quot;}}">
+class Component extends DCLogic {
+  state = {
+    tool: 'timer', theme: 'dark', settingsOpen: false, navCollapsed: false, narrow: false,
+    volume: 70, sound: 'chime', flash: true, examEdit: false,
+    nextId: 4, nextPid: 100, focusId: 1, customName: null,
+    timers: [
+      { id: 1, name: '전체 집중', total: 1500, remaining: 1500, running: false, endAt: null, done: false, sound: 'chime', accent: '#e0a34e' },
+      { id: 2, name: '1모둠 발표', total: 300, remaining: 300, running: false, endAt: null, done: false, sound: 'marimba', accent: '#6ea8e0' },
+      { id: 3, name: '2모둠 토론', total: 600, remaining: 600, running: false, endAt: null, done: false, sound: 'bell', accent: '#6fcf9a' }
+    ],
+    sw: { running: false, startedAt: 0, acc: 0, laps: [] },
+    periods: [
+      { id: 11, name: '1교시', start: '09:00', end: '09:50' },
+      { id: 12, name: '2교시', start: '10:00', end: '10:50' },
+      { id: 13, name: '3교시', start: '11:00', end: '11:50' },
+      { id: 14, name: '4교시', start: '13:00', end: '13:50' }
+    ],
+    pomo: { focusMin: 25, breakMin: 5, cycles: 4, phase: 'focus', round: 1, running: false, endAt: null, remaining: 1500, done: false }
+  };
+
+  ACCENTS = ['#e0a34e', '#6ea8e0', '#6fcf9a', '#e08a9a', '#b79ae0'];
+
+  componentDidMount() {
+    this.rings = {};
+    this._iv = setInterval(this.tick, 100);
+    this._onResize = () => { const narrow = window.innerWidth < 760; if (narrow !== this.state.narrow) this.setState({ narrow }); };
+    window.addEventListener('resize', this._onResize);
+    this._onResize();
+  }
+  componentWillUnmount() {
+    clearInterval(this._iv);
+    window.removeEventListener('resize', this._onResize);
+    Object.values(this.rings || {}).forEach(clearInterval);
+  }
+
+  tick = () => {
+    const now = Date.now();
+    let changed = false;
+    const timers = this.state.timers.map(t => {
+      if (t.running && t.endAt <= now && !t.done) { changed = true; this.startRing(t.id, t.sound); return { ...t, running: false, done: true, remaining: 0, endAt: null }; }
+      return t;
+    });
+    const P = this.state.pomo; let pomo = P;
+    if (P.running && P.endAt <= now && !P.done) { this.play(this.state.sound); pomo = this.advancePomo(P, now); changed = true; }
+    if (changed) this.setState({ timers, pomo }); else this.forceUpdate();
+  };
+
+  pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
+  fmtClock(sec) { sec = Math.max(0, Math.round(sec)); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60; return h > 0 ? `${h}:${this.pad(m)}:${this.pad(s)}` : `${this.pad(m)}:${this.pad(s)}`; }
+  parseHM(str) { if (!str || str.indexOf(':') < 0) return 0; const [h, m] = str.split(':').map(Number); return h * 3600 + m * 60; }
+  hm(sec) { sec = ((sec % 86400) + 86400) % 86400; return this.pad(Math.floor(sec / 3600)) + ':' + this.pad(Math.floor((sec % 3600) / 60)); }
+  remOf(t) { return t.running ? Math.max(0, (t.endAt - Date.now()) / 1000) : t.remaining; }
+
+  // ---- audio ----
+  ensureAC() { if (!this.ac) { try { this.ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (this.ac.state === 'suspended') this.ac.resume(); return this.ac; }
+  play(sound) {
+    const v = Math.max(0, Math.min(1, this.state.volume / 100)); if (v <= 0) return;
+    if (sound === 'custom' && this.customAudio) { try { const a = this.customAudio.cloneNode(); a.volume = v; a.play(); } catch (e) {} return; }
+    const ac = this.ensureAC(); if (!ac) return; const t0 = ac.currentTime;
+    const P = {
+      chime: [[880, 0, .55, 'sine', .3], [1174.7, .15, .55, 'sine', .3], [1568, .3, .8, 'sine', .28]],
+      bell: [[1568, 0, 1.2, 'triangle', .28], [3136, 0, .5, 'sine', .12], [2093, .28, 1.0, 'triangle', .2]],
+      digital: [[988, 0, .09, 'square', .16], [988, .13, .09, 'square', .16], [988, .26, .13, 'square', .16]],
+      marimba: [[659.25, 0, .28, 'sine', .3], [784, .09, .28, 'sine', .3], [987.77, .18, .28, 'sine', .3], [1318.5, .27, .45, 'sine', .3]],
+      soft: [[523.25, 0, 1.5, 'sine', .22], [659.25, .22, 1.5, 'sine', .2], [784, .44, 1.4, 'sine', .16]]
+    };
+    (P[sound] || P.chime).forEach(([f, off, dur, type, peak]) => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type; o.frequency.value = f; o.connect(g); g.connect(ac.destination);
+      const st = t0 + off; g.gain.setValueAtTime(0.0001, st); g.gain.exponentialRampToValueAtTime(peak * v, st + .012); g.gain.exponentialRampToValueAtTime(0.0001, st + dur);
+      o.start(st); o.stop(st + dur + .03);
+    });
+  }
+  startRing(id, sound) { this.play(sound); if (this.rings[id]) return; this.rings[id] = setInterval(() => this.play(sound), 1700); setTimeout(() => this.stopRing(id), 30000); }
+  stopRing(id) { if (this.rings[id]) { clearInterval(this.rings[id]); delete this.rings[id]; } }
+
+  // ---- timers ----
+  updTimer(id, fn) { this.setState({ timers: this.state.timers.map(t => t.id === id ? fn({ ...t }) : t) }); }
+  toggleTimer(id) {
+    const now = Date.now();
+    this.updTimer(id, t => {
+      if (t.done) { this.stopRing(id); t.done = false; t.remaining = t.total; t.endAt = now + t.total * 1000; t.running = true; return t; }
+      if (t.running) { t.remaining = Math.max(0, (t.endAt - now) / 1000); t.running = false; t.endAt = null; return t; }
+      if (t.remaining <= 0) t.remaining = t.total;
+      t.endAt = now + t.remaining * 1000; t.running = true; t.done = false; return t;
+    });
+  }
+  resetTimer(id) { this.stopRing(id); this.updTimer(id, t => { t.running = false; t.done = false; t.remaining = t.total; t.endAt = null; return t; }); }
+  plusMin(id) { const now = Date.now(); this.updTimer(id, t => { if (t.running) t.endAt += 60000; else { t.total += 60; t.remaining = (t.remaining <= 0 || t.done) ? t.total : t.remaining + 60; t.done = false; } return t; }); }
+  setPreset(id, sec) { this.stopRing(id); this.updTimer(id, t => { t.total = sec; t.remaining = sec; t.running = false; t.endAt = null; t.done = false; return t; }); }
+  setName(id, v) { this.updTimer(id, t => { t.name = v; return t; }); }
+  setSnd(id, v) { this.updTimer(id, t => { t.sound = v; return t; }); }
+  addTimer() { const id = this.state.nextId; const n = this.state.timers.length; this.setState({ nextId: id + 1, focusId: id, timers: [...this.state.timers, { id, name: (n + 1) + '모둠', total: 300, remaining: 300, running: false, endAt: null, done: false, sound: this.state.sound, accent: this.ACCENTS[n % this.ACCENTS.length] }] }); }
+  removeTimer(id) { this.stopRing(id); if (this.state.timers.length <= 1) return; const timers = this.state.timers.filter(t => t.id !== id); const focusId = this.state.focusId === id ? timers[0].id : this.state.focusId; this.setState({ timers, focusId }); }
+
+  // ---- stopwatch ----
+  swElapsed() { const s = this.state.sw; return s.running ? s.acc + (Date.now() - s.startedAt) : s.acc; }
+  swToggle() { const s = this.state.sw; if (s.running) this.setState({ sw: { ...s, running: false, acc: s.acc + (Date.now() - s.startedAt) } }); else this.setState({ sw: { ...s, running: true, startedAt: Date.now() } }); }
+  swReset() { this.setState({ sw: { running: false, startedAt: 0, acc: 0, laps: [] } }); }
+  swLap() { const e = this.swElapsed(); if (e <= 0) return; this.setState({ sw: { ...this.state.sw, laps: [...this.state.sw.laps, e] } }); }
+  fmtSW(ms) { const t = Math.floor(ms / 1000); return { main: this.fmtClock(t), cs: this.pad(Math.floor((ms % 1000) / 10)) }; }
+
+  // ---- exam ----
+  updPeriod(id, k, v) { this.setState({ periods: this.state.periods.map(p => p.id === id ? { ...p, [k]: v } : p) }); }
+  addPeriod() { const ps = this.state.periods; const last = ps[ps.length - 1]; let start = '09:00', end = '09:50'; if (last) { const s = this.parseHM(last.end) + 600; start = this.hm(s); end = this.hm(s + 3000); } const id = this.state.nextPid; this.setState({ nextPid: id + 1, periods: [...ps, { id, name: (ps.length + 1) + '교시', start, end }] }); }
+  removePeriod(id) { this.setState({ periods: this.state.periods.filter(p => p.id !== id) }); }
+  loadSuneung() { this.setState({ examEdit: false, periods: [
+    { id: 201, name: '1교시 국어', start: '08:40', end: '10:00' }, { id: 202, name: '2교시 수학', start: '10:30', end: '12:10' },
+    { id: 203, name: '3교시 영어', start: '13:10', end: '14:20' }, { id: 204, name: '4교시 한국사', start: '14:50', end: '15:20' },
+    { id: 205, name: '4교시 탐구', start: '15:35', end: '16:37' } ] }); }
+  examCalc(nSec) {
+    const sorted = [...this.state.periods].sort((a, b) => this.parseHM(a.start) - this.parseHM(b.start));
+    let cur = null, next = null;
+    for (const p of sorted) { const st = this.parseHM(p.start), en = this.parseHM(p.end); if (nSec >= st && nSec < en) { cur = p; break; } }
+    for (const p of sorted) { if (this.parseHM(p.start) > nSec) { next = p; break; } }
+    let state, title, sub = '', remain = 0, prog = 0, remainLabel = '';
+    if (cur) { const st = this.parseHM(cur.start), en = this.parseHM(cur.end); state = 'active'; title = cur.name; remain = en - nSec; prog = (nSec - st) / (en - st); remainLabel = '남음'; }
+    else if (sorted.length && nSec < this.parseHM(sorted[0].start)) { state = 'wait'; title = sorted[0].name; remain = this.parseHM(sorted[0].start) - nSec; remainLabel = '후 시작'; }
+    else if (next) { state = 'break'; title = '쉬는 시간'; sub = '다음: ' + next.name; remain = this.parseHM(next.start) - nSec; remainLabel = '후 시작'; }
+    else { state = 'done'; title = '모든 일정 종료'; sub = '오늘 예정된 교시가 끝났습니다'; }
+    return { sorted, state, title, sub, remain, prog, remainLabel };
+  }
+
+  // ---- pomodoro ----
+  advancePomo(P, now) {
+    let phase, round = P.round, dur;
+    if (P.phase === 'focus') { phase = 'break'; dur = P.breakMin; round = P.round; }
+    else { phase = 'focus'; round = P.round >= P.cycles ? 1 : P.round + 1; dur = P.focusMin; }
+    return { ...P, phase, round, remaining: dur * 60, endAt: now + dur * 60000, running: true, done: false };
+  }
+  pomoToggle() { const now = Date.now(); const P = this.state.pomo; if (P.running) this.setState({ pomo: { ...P, running: false, remaining: Math.max(0, (P.endAt - now) / 1000), endAt: null } }); else { let rem = P.remaining; if (rem <= 0) rem = (P.phase === 'focus' ? P.focusMin : P.breakMin) * 60; this.setState({ pomo: { ...P, running: true, endAt: now + rem * 1000, done: false } }); } }
+  pomoReset() { const P = this.state.pomo; this.setState({ pomo: { ...P, phase: 'focus', round: 1, running: false, endAt: null, remaining: P.focusMin * 60, done: false } }); }
+  pomoSkip() { this.setState({ pomo: this.advancePomo(this.state.pomo, Date.now()) }); }
+  pomoAdj(key, delta) { const P = this.state.pomo; const v = Math.max(1, Math.min(90, P[key] + delta)); const np = { ...P, [key]: v }; if (!P.running && ((P.phase === 'focus' && key === 'focusMin') || (P.phase === 'break' && key === 'breakMin'))) np.remaining = v * 60; this.setState({ pomo: np }); }
+
+  // ---- settings ----
+  onUploadFile(e) { const f = e.target.files && e.target.files[0]; if (!f) return; try { const url = URL.createObjectURL(f); this.customAudio = new Audio(url); } catch (err) {} this.setState({ customName: f.name, sound: 'custom' }); }
+
+  soundBase() { const b = [{ id: 'chime', label: '차임' }, { id: 'bell', label: '벨' }, { id: 'digital', label: '디지털' }, { id: 'marimba', label: '마림바' }, { id: 'soft', label: '자연음' }]; if (this.state.customName) b.push({ id: 'custom', label: '내 사운드' }); return b; }
+
+  renderVals() {
+    const S = this.state;
+    const now = new Date();
+    const cf = this.props.clockFormat || '24';
+    let h = now.getHours(); const m = now.getMinutes(), s = now.getSeconds();
+    if (cf === '12') { let hh = h % 12; if (hh === 0) hh = 12; h = hh; }
+    const clockHHMM = this.pad(h) + ':' + this.pad(m), clockSS = this.pad(s);
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    const clockDate = (now.getMonth() + 1) + '월 ' + now.getDate() + '일';
+    const clockWeekday = days[now.getDay()] + '요일';
+    const soundOptions = this.soundBase();
+
+    const tool = S.tool;
+    const titles = { timer: ['타이머', '카운트다운 · 그룹별 개별 설정'], stopwatch: ['스톱워치', '경과 시간 측정 및 랩 기록'], clock: ['시계', '현재 시각과 세계 시각'], exam: ['교시 스케줄', '수업/시험 교시 자동 전환'], pomo: ['뽀모도로', '집중과 휴식 사이클'] };
+    const toolTitle = titles[tool][0], toolSub = titles[tool][1];
+
+    // nav
+    const icons = {
+      timer: React.createElement('svg', { width: 17, height: 17, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round' }, React.createElement('circle', { cx: 8, cy: 9.3, r: 4.7 }), React.createElement('path', { d: 'M8 9.3V6.3M6.2 1.6h3.6M12.2 4.3l.9.9' })),
+      stopwatch: React.createElement('svg', { width: 17, height: 17, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('circle', { cx: 8, cy: 9, r: 5 }), React.createElement('path', { d: 'M8 9l2-1.4M6.4 1.6h3.2M8 1.6v1.9' })),
+      clock: React.createElement('svg', { width: 17, height: 17, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('circle', { cx: 8, cy: 8, r: 6 }), React.createElement('path', { d: 'M8 4.6V8l2.6 1.5' })),
+      exam: React.createElement('svg', { width: 17, height: 17, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('rect', { x: 2.5, y: 2.5, width: 11, height: 11, rx: 2 }), React.createElement('path', { d: 'M5 6h6M5 9h6M5 11.6h3.4' })),
+      pomo: React.createElement('svg', { width: 17, height: 17, viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('path', { d: 'M8 2a6 6 0 1 0 6 6' }), React.createElement('path', { d: 'M8 8V4.5M14 4.5l-2 1' }))
+    };
+    const runCount = S.timers.filter(t => t.running).length;
+    const collapsed = S.navCollapsed || S.narrow;
+    const nav = ['timer', 'stopwatch', 'clock', 'exam', 'pomo'].map(k => {
+      const badge = (k === 'timer' && runCount > 0) ? String(runCount) : null;
+      return { key: k, label: titles[k][0], icon: icons[k], onClick: () => this.setState({ tool: k }),
+        bg: tool === k ? 'var(--surface)' : 'transparent', color: tool === k ? 'var(--text)' : 'var(--muted)',
+        weight: tool === k ? '600' : '400', badge, badgeShow: !collapsed && !!badge };
+    });
+
+    // exam
+    const nSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+    const ec = this.examCalc(nSec);
+    const meta = { active: { l: '진행 중', c: 'var(--accent)', bg: 'var(--accent-soft)', bd: 'var(--accent)' }, break: { l: '쉬는 시간', c: 'var(--text)', bg: 'var(--surface)', bd: 'var(--border)' }, wait: { l: '시작 전', c: 'var(--muted)', bg: 'var(--surface)', bd: 'var(--border)' }, done: { l: '종료', c: 'var(--faint)', bg: 'var(--surface)', bd: 'var(--border)' } }[ec.state];
+    const examPill = { text: ec.state === 'active' ? ec.title + ' · ' + this.fmtClock(ec.remain) : ec.state === 'break' ? '쉬는 시간' : ec.state === 'wait' ? '수업 전' : '일정 종료', color: meta.c, bg: meta.bg, border: meta.bd, dot: meta.c };
+    const exam = {
+      stateLabel: meta.l, stateColor: meta.c, headBg: meta.bg, headBorder: meta.bd,
+      title: ec.title, sub: ec.sub, subOnly: (ec.state === 'break' || ec.state === 'done'),
+      hasRemain: ec.state !== 'done', remain: this.fmtClock(ec.remain), remainLabel: ec.remainLabel,
+      pct: Math.round(Math.max(0, Math.min(1, ec.prog)) * 100) + '%',
+      viewMode: !S.examEdit, editMode: S.examEdit,
+      onEdit: () => this.setState({ examEdit: !S.examEdit }), onAdd: () => this.addPeriod(), onLoadSuneung: () => this.loadSuneung(),
+      periods: ec.sorted.map(p => {
+        const st = this.parseHM(p.start), en = this.parseHM(p.end); const state = en <= nSec ? 'done' : (nSec >= st && nSec < en) ? 'current' : 'up'; const dur = Math.round((en - st) / 60);
+        return { id: p.id, name: p.name, start: p.start, end: p.end, range: p.start + '–' + p.end, dur: dur + '분',
+          dot: state === 'current' ? 'var(--accent)' : state === 'done' ? 'var(--faint)' : 'var(--border-2)',
+          bg: state === 'current' ? 'var(--accent-soft)' : 'transparent', border: state === 'current' ? 'var(--accent)' : 'var(--border)',
+          nameColor: state === 'done' ? 'var(--faint)' : 'var(--text)', timeColor: state === 'done' ? 'var(--faint)' : 'var(--muted)',
+          onName: e => this.updPeriod(p.id, 'name', e.target.value), onStart: e => this.updPeriod(p.id, 'start', e.target.value), onEnd: e => this.updPeriod(p.id, 'end', e.target.value), onDelete: () => this.removePeriod(p.id) };
+      })
+    };
+
+    // timers
+    const buildT = (t) => {
+      const rem = this.remOf(t); const p = t.total > 0 ? rem / t.total : 0; const eff = t.done ? 1 : Math.max(0, Math.min(1, p));
+      const color = t.done ? 'var(--danger)' : t.running ? t.accent : 'var(--muted)';
+      return { id: t.id, name: t.name, sound: t.sound, accent: t.accent, color, display: this.fmtClock(Math.ceil(rem)),
+        running: t.running, done: t.done, idle: !t.running && !t.done, pct: (eff * 100).toFixed(1) + '%',
+        digitColor: t.done ? 'var(--danger)' : 'var(--text)',
+        cardBg: t.id === S.focusId ? 'var(--surface)' : 'var(--panel)', cardBorder: t.done ? 'var(--danger)' : (t.id === S.focusId ? 'var(--border-2)' : 'var(--border)'),
+        btnBg: t.done ? 'var(--danger)' : t.running ? 'var(--surface-2)' : t.accent, btnBorder: t.running ? 'var(--border)' : 'transparent', btnColor: t.running ? 'var(--text)' : 'var(--on-accent)',
+        onFocus: () => this.setState({ focusId: t.id }), onName: e => this.setName(t.id, e.target.value),
+        onToggleStop: () => this.toggleTimer(t.id), onResetStop: () => this.resetTimer(t.id), onDelete: () => this.removeTimer(t.id) };
+    };
+    const timers = S.timers.map(buildT);
+    const ft = S.timers.find(t => t.id === S.focusId) || S.timers[0];
+    const fr = this.remOf(ft); const fp = ft.total > 0 ? fr / ft.total : 0; const feff = ft.done ? 1 : Math.max(0, Math.min(1, fp));
+    const fcirc = 2 * Math.PI * 124; const fcolor = ft.done ? 'var(--danger)' : ft.running ? ft.accent : 'var(--muted)';
+    const hero = { id: ft.id, name: ft.name, sound: ft.sound, display: this.fmtClock(Math.ceil(fr)),
+      running: ft.running, done: ft.done, idle: !ft.running && !ft.done, color: fcolor, btnBg: ft.done ? 'var(--danger)' : ft.accent,
+      glow: '#aace78', glowOn: 0, circ: fcirc.toFixed(1), dash: (fcirc * (1 - feff)).toFixed(1),
+      statusLabel: ft.done ? '완료 · 알람' : ft.running ? '진행 중' : '준비', statusColor: ft.done ? 'var(--danger)' : ft.running ? ft.accent : 'var(--muted)',
+      onName: e => this.setName(ft.id, e.target.value), onToggle: () => this.toggleTimer(ft.id), onReset: () => this.resetTimer(ft.id), onPlus: () => this.plusMin(ft.id), onSound: e => this.setSnd(ft.id, e.target.value),
+      presets: [1, 3, 5, 10, 25, 45].map(mn => ({ label: mn + '분', on: () => this.setPreset(ft.id, mn * 60), bg: ft.total === mn * 60 ? 'var(--accent-soft)' : 'var(--surface)', border: ft.total === mn * 60 ? 'var(--accent)' : 'var(--border)', color: ft.total === mn * 60 ? 'var(--accent)' : 'var(--muted)' })) };
+
+    // stopwatch
+    const swe = this.swElapsed(); const swf = this.fmtSW(swe); let prev = 0;
+    const laps = S.sw.laps.map((tot, i) => { const sp = tot - prev; prev = tot; const spf = this.fmtSW(sp), tf = this.fmtSW(tot); return { n: this.pad(i + 1), split: spf.main + '.' + spf.cs, total: tf.main + '.' + tf.cs }; }).reverse();
+    const sw = { main: swf.main, cs: swf.cs, running: S.sw.running, notRunning: !S.sw.running, statusLabel: S.sw.running ? '측정 중' : (swe > 0 ? '일시정지' : '대기'), statusColor: S.sw.running ? 'var(--accent)' : 'var(--muted)', onToggle: () => this.swToggle(), onReset: () => this.swReset(), onLap: () => this.swLap(), laps };
+
+    // clock
+    const zones = [{ city: '뉴욕', tz: 'America/New_York', diff: '−14시간' }, { city: '런던', tz: 'Europe/London', diff: '−9시간' }, { city: '파리', tz: 'Europe/Paris', diff: '−8시간' }, { city: '도쿄', tz: 'Asia/Tokyo', diff: '동일' }];
+    const worldClocks = zones.map(z => { let time = '--:--'; try { time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: z.tz }).format(now); } catch (e) {} return { city: z.city, diff: z.diff, time }; });
+
+    // pomodoro
+    const P = S.pomo; const prem = P.running ? Math.max(0, (P.endAt - Date.now()) / 1000) : P.remaining;
+    const pdur = (P.phase === 'focus' ? P.focusMin : P.breakMin) * 60; const pp = pdur > 0 ? prem / pdur : 0;
+    const pcirc = 2 * Math.PI * 124; const isFocus = P.phase === 'focus'; const pcolor = isFocus ? 'var(--accent)' : '#6fcf9a';
+    const pomo = { display: this.fmtClock(Math.ceil(prem)), phaseLabel: isFocus ? '집중 · ' + P.round + '/' + P.cycles : '휴식', color: pcolor, glow: isFocus ? '#aace78' : '#8fd0a0', glowOn: 0,
+      circ: pcirc.toFixed(1), dash: (pcirc * (1 - Math.max(0, Math.min(1, pp)))).toFixed(1), running: P.running, notRunning: !P.running,
+      focusChip: isFocus ? 'var(--accent)' : 'transparent', focusChipColor: isFocus ? 'var(--on-accent)' : 'var(--muted)', breakChip: !isFocus ? '#6fcf9a' : 'transparent', breakChipColor: !isFocus ? '#0c1a12' : 'var(--muted)',
+      focusMin: P.focusMin, breakMin: P.breakMin,
+      dots: Array.from({ length: P.cycles }, (_, i) => ({ bg: i < P.round ? 'var(--accent)' : 'var(--track)' })),
+      onToggle: () => this.pomoToggle(), onReset: () => this.pomoReset(), onSkip: () => this.pomoSkip(),
+      onFocusUp: () => this.pomoAdj('focusMin', 5), onFocusDown: () => this.pomoAdj('focusMin', -5), onBreakUp: () => this.pomoAdj('breakMin', 1), onBreakDown: () => this.pomoAdj('breakMin', -1) };
+
+    // settings
+    const soundChips = soundOptions.map(o => ({ id: o.id, label: o.label, active: S.sound === o.id, onSelect: () => { this.setState({ sound: o.id }); this.play(o.id); }, bg: S.sound === o.id ? 'var(--accent-soft)' : 'var(--surface)', border: S.sound === o.id ? 'var(--accent)' : 'var(--border)', color: S.sound === o.id ? 'var(--accent)' : 'var(--muted)' }));
+    const flashing = S.flash && (S.timers.some(t => t.done) || S.pomo.done);
+
+    return {
+      theme: S.theme, isDark: S.theme === 'dark', isLight: S.theme === 'light',
+      clockHHMM, clockSS, clockDate, clockWeekday, toolTitle, toolSub, nav,
+      navExpanded: !collapsed, sideW: collapsed ? '70px' : '216px',
+      brandJustify: collapsed ? 'center' : 'flex-start', brandPad: collapsed ? '0 0 20px' : '0 22px 26px',
+      showCollapseBtn: !S.narrow && !S.navCollapsed, showExpandBtn: !S.narrow && S.navCollapsed,
+      navJustify: collapsed ? 'center' : 'flex-start', navBtnPad: collapsed ? '11px 0' : '11px 14px',
+      footDir: collapsed ? 'column' : 'row', footBtnFlex: collapsed ? 'none' : '1', settingsW: collapsed ? 'auto' : '42px',
+      themeLabel: S.theme === 'dark' ? '라이트' : '다크',
+      showSub: !S.narrow, showPill: !S.narrow,
+      onToggleNav: () => this.setState({ navCollapsed: !S.navCollapsed }),
+      isTimer: tool === 'timer', isStopwatch: tool === 'stopwatch', isClock: tool === 'clock', isExam: tool === 'exam', isPomo: tool === 'pomo',
+      examPill, exam, timers, hero, sw, worldClocks, pomo, soundOptions, soundChips, flashing,
+      onAddTimer: () => this.addTimer(),
+      onToggleTheme: () => this.setState({ theme: S.theme === 'dark' ? 'light' : 'dark' }),
+      onToggleSettings: () => this.setState({ settingsOpen: !S.settingsOpen }), onCloseSettings: () => this.setState({ settingsOpen: false }),
+      settingsOpen: S.settingsOpen, stop: (e) => { e.stopPropagation(); },
+      volume: S.volume, volumePct: S.volume + '%', onVolume: e => this.setState({ volume: Number(e.target.value) }),
+      onPreview: () => this.play(S.sound), onUpload: e => this.onUploadFile(e),
+      uploadLabel: S.customName || '오디오 파일 업로드', uploadColor: S.customName ? 'var(--text)' : 'var(--muted)',
+      flash: S.flash, flashTrack: S.flash ? 'var(--accent)' : 'var(--track)', flashKnob: S.flash ? '22px' : '3px', onToggleFlash: () => this.setState({ flash: !S.flash })
+    };
+  }
+}
+</script>
+</body>
+</html>
