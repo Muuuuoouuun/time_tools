@@ -224,13 +224,28 @@ describe('persistence', () => {
     expect(back.timers[0].running).toBe(true);
     expect(Math.round(back.timers[0].remaining)).toBe(180);
   });
-  it('marks an already-elapsed running timer done on hydrate', () => {
+  it('quietly settles an elapsed running timer on hydrate (no surprise flash: done stays false)', () => {
     const s = initialState();
     s.timers[0] = { ...s.timers[0], running: true, endAt: 10_000, remaining: 300 };
     const back = hydrate(serialize(s), 10_000 + 400_000);
-    expect(back.timers[0].done).toBe(true);
+    expect(back.timers[0].done).toBe(false);
     expect(back.timers[0].running).toBe(false);
     expect(back.timers[0].remaining).toBe(0);
+    expect(back.timers[0].endAt).toBeNull();
+  });
+  it('clears a custom sound selection with no persisted data on hydrate', () => {
+    const s = initialState();
+    s.sound = 'custom'; s.customName = 'my.mp3'; s.customData = null;
+    const back = hydrate(serialize(s));
+    expect(back.sound).toBe('chime');
+    expect(back.customName).toBeNull();
+  });
+  it('keeps a custom sound backed by persisted data', () => {
+    const s = initialState();
+    s.sound = 'custom'; s.customName = 'my.mp3'; s.customData = 'data:audio/mpeg;base64,AA==';
+    const back = hydrate(serialize(s));
+    expect(back.sound).toBe('custom');
+    expect(back.customName).toBe('my.mp3');
   });
   it('falls back to initial state on malformed JSON', () => {
     expect(hydrate('{not json', 0).theme).toBe('dark');

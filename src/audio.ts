@@ -19,6 +19,7 @@ const RING_MAX_MS = 30000;
 export class AudioEngine {
   private ac: AudioContext | null = null;
   private customAudio: HTMLAudioElement | null = null;
+  private customUrl: string | null = null;
   private rings = new Map<number, { iv: ReturnType<typeof setInterval>; to: ReturnType<typeof setTimeout> }>();
 
   constructor(private getVolume: () => number) {}
@@ -101,6 +102,11 @@ export class AudioEngine {
 
   /** Register an uploaded custom sound (object URL or data URL). */
   setCustom(url: string): void {
+    // Release the previous blob URL to avoid leaking it (data: URLs need no revoke).
+    if (this.customUrl && this.customUrl.startsWith('blob:')) {
+      try { URL.revokeObjectURL(this.customUrl); } catch { /* already revoked */ }
+    }
+    this.customUrl = url;
     try {
       this.customAudio = new Audio(url);
     } catch {

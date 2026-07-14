@@ -64,6 +64,7 @@ export function createTimerView(): View {
     root = r;
     presetBtns = [];
     cardRefs = [];
+    heroToggleMode = null; // fresh empty button each rebuild — force icon injection in update()
     clear(root);
     const wrap = el('div', { style: 'display:flex;flex-direction:column;align-items:center;max-width:960px;margin:0 auto' });
     wrap.append(buildHero(ctx), buildGrid(ctx));

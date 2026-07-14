@@ -9,7 +9,7 @@ export function createClockView(): View {
   let hhmmEl: HTMLSpanElement;
   let ssEl: HTMLSpanElement;
   let seg: { el: HTMLSpanElement; fmt: ClockFormat }[] = [];
-  let world: { time: HTMLSpanElement; diff: HTMLDivElement; tz: string }[] = [];
+  let world: { time: HTMLSpanElement; diff: HTMLDivElement; tz: string; fmt: Intl.DateTimeFormat | null }[] = [];
 
   function build(r: HTMLElement, ctx: Ctx): void {
     root = r;
@@ -44,7 +44,11 @@ export function createClockView(): View {
         el('div', {}, [el('div', { style: 'font-size:13.5px;font-weight:500' }, [z.city]), diff]),
         time,
       ]));
-      world.push({ time, diff, tz: z.tz });
+      let fmt: Intl.DateTimeFormat | null = null;
+      try {
+        fmt = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: z.tz });
+      } catch { /* unsupported tz */ }
+      world.push({ time, diff, tz: z.tz, fmt });
     }
     worldSection.append(grid);
 
@@ -66,11 +70,7 @@ export function createClockView(): View {
       g.el.style.color = on ? 'var(--on-accent)' : 'var(--muted)';
     }
     for (const w of world) {
-      let time = '--:--';
-      try {
-        time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: w.tz }).format(now);
-      } catch { /* unsupported tz */ }
-      w.time.textContent = time;
+      w.time.textContent = w.fmt ? w.fmt.format(now) : '--:--';
       w.diff.textContent = zoneOffsetLabel(zoneDiffMinutes(w.tz, now));
     }
   }

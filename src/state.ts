@@ -344,15 +344,25 @@ export function pomoRemaining(P: Pomo, now: number): number {
 // World-clock offsets (hardening §5.2 — prototype used static strings)
 // ---------------------------------------------------------------------------
 
+// Intl.DateTimeFormat construction is costly; cache one per zone (reused each tick).
+const _offsetFmtCache = new Map<string, Intl.DateTimeFormat>();
+function offsetFmt(tz: string): Intl.DateTimeFormat {
+  let f = _offsetFmtCache.get(tz);
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hour12: false,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+    _offsetFmtCache.set(tz, f);
+  }
+  return f;
+}
+
 /** UTC offset of a time zone at `date`, in minutes (e.g. KST => +540). */
 export function tzOffsetMinutes(tz: string, date: Date): number {
-  const dtf = new Intl.DateTimeFormat('en-US', {
-    timeZone: tz, hour12: false,
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', second: '2-digit',
-  });
   const map: Record<string, string> = {};
-  for (const p of dtf.formatToParts(date)) map[p.type] = p.value;
+  for (const p of offsetFmt(tz).formatToParts(date)) map[p.type] = p.value;
   let hour = Number(map.hour);
   if (hour === 24) hour = 0;
   const asUTC = Date.UTC(+map.year, +map.month - 1, +map.day, hour, +map.minute, +map.second);
@@ -419,7 +429,9 @@ export function serialize(s: AppState): string {
 
 function reconcileTimer(t: Timer, now: number): Timer {
   if (!t.running || t.endAt == null) return t;
-  if (t.endAt <= now) return { ...t, running: false, done: true, remaining: 0, endAt: null };
+  // Elapsed while the app was closed: settle quietly (no surprise full-screen flash
+  // or alarm on load — mirrors reconcilePomo). Restarting it recomputes from total.
+  if (t.endAt <= now) return { ...t, running: false, done: false, remaining: 0, endAt: null };
   return { ...t, remaining: (t.endAt - now) / 1000 };
 }
 
@@ -449,6 +461,12 @@ export function hydrate(json: string | null, now: number = Date.now()): AppState
   s.timers = s.timers.map((t) => reconcileTimer(t, now));
   s.pomo = reconcilePomo({ ...base.pomo, ...s.pomo }, now);
   s.volume = Math.max(0, Math.min(100, Number(s.volume) || 0));
+  // A custom sound without persisted data (uploaded file was too large to store, and
+  // object URLs don't survive reload) is unavailable — clear the phantom selection.
+  if (!s.customData) {
+    s.customName = null;
+    if (s.sound === 'custom') s.sound = 'chime';
+  }
   return s;
 }
 
