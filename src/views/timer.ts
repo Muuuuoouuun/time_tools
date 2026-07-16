@@ -1,7 +1,7 @@
 import { el, clear } from '../dom';
 import { iconPlay, iconPause, iconReset, iconPlus, iconClose, iconSpeaker } from '../icons';
 import {
-  fmtClock, remOf, mapTimer, toggleTimer, resetTimer, plusMin, setPreset,
+  fmtClock, parseClock, remOf, mapTimer, toggleTimer, resetTimer, plusMin, setPreset,
   addTimer, removeTimer, soundOptions, type Timer,
 } from '../state';
 import type { Ctx, View } from '../view';
@@ -15,6 +15,17 @@ function modeOf(t: Timer): Mode {
 }
 function syncInput(input: HTMLInputElement, value: string): void {
   if (document.activeElement !== input && input.value !== value) input.value = value;
+}
+
+interface HeroDrag {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  prevAngle: number;
+  cumDeg: number;
+  startTotal: number;
+  moved: boolean;
+  startedOnDisplay: boolean;
 }
 
 interface CardRef {
@@ -33,6 +44,10 @@ export function createTimerView(): View {
   let root: HTMLElement;
   let heroName: HTMLInputElement;
   let heroDisplay: HTMLSpanElement;
+  let heroTimeInput: HTMLInputElement;
+  let editingTime = false;
+  let heroRingWrap: HTMLDivElement;
+  let heroDrag: HeroDrag | null = null;
   let heroStatus: HTMLSpanElement;
   let heroRing: SVGCircleElement;
   let heroToggle: HTMLButtonElement;
@@ -59,11 +74,87 @@ export function createTimerView(): View {
     ctx.audio.stopRing(id);
     commit(ctx, id, resetTimer);
   }
+  function enterTimeEdit(ctx: Ctx): void {
+    const ft = focused(ctx);
+    editingTime = true;
+    heroTimeInput.value = fmtClock(remOf(ft, ctx.now()));
+    heroDisplay.style.display = 'none';
+    heroTimeInput.style.display = '';
+    heroTimeInput.focus();
+    heroTimeInput.select();
+  }
+  function exitTimeEdit(ctx: Ctx, apply: boolean): void {
+    if (!editingTime) return;
+    editingTime = false;
+    if (apply) {
+      const sec = parseClock(heroTimeInput.value);
+      if (sec > 0) {
+        const id = focused(ctx).id;
+        ctx.audio.stopRing(id);
+        commit(ctx, id, (t) => setPreset(t, sec));
+      }
+    }
+    heroTimeInput.style.display = 'none';
+    heroDisplay.style.display = '';
+  }
+
+  // Dial: dragging the hero ring while stopped scrubs the duration (360° == 60min,
+  // continuing past a full turn keeps adding — like a mechanical kitchen timer).
+  const DEG_TO_SEC = 3600 / 360;
+  function ringAngle(clientX: number, clientY: number): number {
+    const rect = heroRingWrap.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return Math.atan2(clientX - cx, cy - clientY) * (180 / Math.PI);
+  }
+  function onHeroPointerDown(ctx: Ctx, e: PointerEvent): void {
+    if (editingTime) return;
+    e.preventDefault();
+    heroDrag = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      prevAngle: ringAngle(e.clientX, e.clientY),
+      cumDeg: 0,
+      startTotal: focused(ctx).total,
+      moved: false,
+      startedOnDisplay: e.target === heroDisplay,
+    };
+    heroRingWrap.setPointerCapture(e.pointerId);
+  }
+  function onHeroPointerMove(ctx: Ctx, e: PointerEvent): void {
+    const d = heroDrag;
+    if (!d || e.pointerId !== d.pointerId) return;
+    if (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) > 3) {
+      d.moved = true;
+      heroRingWrap.style.cursor = 'grabbing';
+    }
+    if (!d.moved || focused(ctx).running) return;
+    const angle = ringAngle(e.clientX, e.clientY);
+    let delta = angle - d.prevAngle;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+    d.cumDeg += delta;
+    d.prevAngle = angle;
+    const sec = Math.max(0, Math.min(99 * 3600, Math.round(d.startTotal + d.cumDeg * DEG_TO_SEC)));
+    const id = focused(ctx).id;
+    ctx.audio.stopRing(id);
+    commit(ctx, id, (t) => setPreset(t, sec));
+  }
+  function onHeroPointerEnd(ctx: Ctx, e: PointerEvent): void {
+    const d = heroDrag;
+    if (!d || e.pointerId !== d.pointerId) return;
+    heroRingWrap.releasePointerCapture(e.pointerId);
+    heroRingWrap.style.cursor = focused(ctx).running ? 'default' : 'grab';
+    heroDrag = null;
+    if (!d.moved && d.startedOnDisplay) enterTimeEdit(ctx);
+  }
 
   function build(r: HTMLElement, ctx: Ctx): void {
     root = r;
     presetBtns = [];
     cardRefs = [];
+    heroDrag = null;
     heroToggleMode = null; // fresh empty button each rebuild — force icon injection in update()
     clear(root);
     const wrap = el('div', { style: 'display:flex;flex-direction:column;align-items:center;max-width:960px;margin:0 auto' });
@@ -82,20 +173,40 @@ export function createTimerView(): View {
       oninput: (e: Event) => commit(ctx, focused(ctx).id, (t) => ({ ...t, name: (e.target as HTMLInputElement).value })),
     }) as HTMLInputElement;
 
-    heroDisplay = el('span', { class: 'mono', style: 'font-size:58px;font-weight:200;letter-spacing:.01em;line-height:1' });
+    editingTime = false;
+    heroDrag = null;
+    heroDisplay = el('span', {
+      class: 'mono', title: '클릭하여 시간 직접 입력 · 드래그로 조절', style: 'font-size:58px;font-weight:200;letter-spacing:.01em;line-height:1;cursor:pointer',
+    });
+    heroTimeInput = el('input', {
+      class: 'mono', inputmode: 'numeric', placeholder: 'MM:SS',
+      style: 'display:none;font-size:58px;font-weight:200;letter-spacing:.01em;line-height:1;text-align:center;background:transparent;border:none;outline:none;color:var(--text);width:220px;padding:0',
+      onkeydown: (e: Event) => {
+        const key = (e as KeyboardEvent).key;
+        if (key === 'Enter') { exitTimeEdit(ctx, true); heroTimeInput.blur(); }
+        else if (key === 'Escape') { exitTimeEdit(ctx, false); heroTimeInput.blur(); }
+      },
+      onblur: () => exitTimeEdit(ctx, true),
+    }) as HTMLInputElement;
     heroStatus = el('span', { style: 'font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase' });
     const ringSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     ringSvg.setAttribute('width', '270'); ringSvg.setAttribute('height', '270');
     ringSvg.setAttribute('viewBox', '0 0 270 270');
-    ringSvg.setAttribute('style', 'position:absolute;transform:rotate(-90deg)');
+    ringSvg.setAttribute('style', 'position:absolute;transform:rotate(-90deg);pointer-events:none');
     ringSvg.innerHTML = '<circle cx="135" cy="135" r="124" fill="none" stroke="var(--track)" stroke-width="7"/>' +
       '<circle cx="135" cy="135" r="124" fill="none" stroke-width="7" stroke-linecap="round" style="transition:stroke-dashoffset .25s linear"/>';
     heroRing = ringSvg.querySelectorAll('circle')[1] as SVGCircleElement;
     heroRing.setAttribute('stroke-dasharray', FCIRC.toFixed(1));
-    const ringWrap = el('div', { style: 'position:relative;width:270px;height:270px;display:flex;align-items:center;justify-content:center' }, [
+    heroRingWrap = el('div', {
+      style: 'position:relative;width:270px;height:270px;display:flex;align-items:center;justify-content:center;touch-action:none;cursor:grab;user-select:none',
+      onpointerdown: (e: Event) => onHeroPointerDown(ctx, e as PointerEvent),
+      onpointermove: (e: Event) => onHeroPointerMove(ctx, e as PointerEvent),
+      onpointerup: (e: Event) => onHeroPointerEnd(ctx, e as PointerEvent),
+      onpointercancel: (e: Event) => onHeroPointerEnd(ctx, e as PointerEvent),
+    }, [
       ringSvg,
-      el('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:9px' }, [heroDisplay, heroStatus]),
-    ]);
+      el('div', { style: 'display:flex;flex-direction:column;align-items:center;gap:9px' }, [heroDisplay, heroTimeInput, heroStatus]),
+    ]) as HTMLDivElement;
 
     const resetBtn = el('button', {
       title: '초기화', class: 'h-text-bd2',
@@ -137,7 +248,7 @@ export function createTimerView(): View {
       heroSound,
     ]);
 
-    box.append(heroName, ringWrap, controls, presetRow, soundBar);
+    box.append(heroName, heroRingWrap, controls, presetRow, soundBar);
     return box;
   }
 
@@ -211,6 +322,7 @@ export function createTimerView(): View {
     heroRing.setAttribute('stroke-dashoffset', (FCIRC * (1 - feff)).toFixed(1));
     heroStatus.textContent = ft.done ? '완료 · 알람' : ft.running ? '진행 중' : '준비';
     heroStatus.style.color = fcolor;
+    if (!heroDrag) heroRingWrap.style.cursor = ft.running ? 'default' : 'grab';
     const hMode = modeOf(ft);
     heroToggle.style.background = ft.done ? 'var(--danger)' : ft.accent;
     heroToggle.style.boxShadow = `0 12px 30px -10px ${fcolor}`;

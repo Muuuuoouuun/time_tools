@@ -126,6 +126,16 @@ export function parseHM(str: string): number {
   return h * 3600 + m * 60;
 }
 
+/** Parses a clock-style duration typed by the user into seconds.
+ * Accepts "SS", "MM:SS" or "H:MM:SS"; a bare number is read as minutes. */
+export function parseClock(str: string): number {
+  const parts = str.trim().split(':').map(Number);
+  if (!parts.length || parts.some((n) => Number.isNaN(n))) return 0;
+  const [a, b, c] = parts;
+  const sec = parts.length === 1 ? a * 60 : parts.length === 2 ? a * 60 + b : a * 3600 + b * 60 + c;
+  return Math.max(0, Math.min(99 * 3600, Math.round(sec)));
+}
+
 export function hm(sec: number): string {
   sec = ((sec % 86400) + 86400) % 86400;
   return pad(Math.floor(sec / 3600)) + ':' + pad(Math.floor((sec % 3600) / 60));
@@ -181,7 +191,7 @@ export function mapTimer(timers: Timer[], id: number, fn: (t: Timer) => Timer): 
 export function makeTimer(id: number, index: number, sound: string): Timer {
   return {
     id,
-    name: index + 1 + '모둠',
+    name: index + 1 + '번 학생',
     total: 300,
     remaining: 300,
     running: false,

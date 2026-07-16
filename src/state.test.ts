@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  pad, fmtClock, parseHM, hm, fmtSW,
+  pad, fmtClock, parseHM, parseClock, hm, fmtSW,
   toggleTimer, resetTimer, plusMin, setPreset, addTimer, removeTimer, remOf,
   swElapsed, swToggle, swReset, swLap,
   examCalc, addPeriod, removePeriod, updPeriod,
@@ -17,6 +17,11 @@ describe('formatters', () => {
   it('fmtClock clamps negatives', () => expect(fmtClock(-5)).toBe('00:00'));
   it('parseHM', () => expect(parseHM('09:30')).toBe(9 * 3600 + 30 * 60));
   it('parseHM bad input', () => expect(parseHM('')).toBe(0));
+  it('parseClock reads a bare number as minutes', () => expect(parseClock('7')).toBe(420));
+  it('parseClock reads MM:SS', () => expect(parseClock('05:30')).toBe(330));
+  it('parseClock reads H:MM:SS', () => expect(parseClock('1:02:03')).toBe(3723));
+  it('parseClock rejects garbage', () => expect(parseClock('abc')).toBe(0));
+  it('parseClock clamps negatives to 0', () => expect(parseClock('-5')).toBe(0));
   it('hm wraps day', () => expect(hm(9 * 3600 + 5 * 60)).toBe('09:05'));
   it('fmtSW splits ms', () => expect(fmtSW(65_430)).toEqual({ main: '01:05', cs: '43' }));
 });
@@ -71,7 +76,7 @@ describe('timer collection', () => {
     const patch = addTimer(s);
     expect(patch.timers.length).toBe(4);
     expect(patch.focusId).toBe(s.nextId);
-    expect(patch.timers[3].name).toBe('4모둠');
+    expect(patch.timers[3].name).toBe('4번 학생');
   });
   it('removeTimer drops one and refocuses', () => {
     const s = initialState();
