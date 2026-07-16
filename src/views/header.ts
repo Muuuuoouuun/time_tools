@@ -1,6 +1,6 @@
 import { el } from '../dom';
 import { TOOL_TITLES } from '../labels';
-import { fmtClock, examCalc, nowSec, pad, type ExamState } from '../state';
+import { fmtClock, examCalc, nowSec, pad, navShellHidden, type ExamState } from '../state';
 import type { Ctx, View } from '../view';
 
 export interface PillMeta { l: string; c: string; bg: string; bd: string; }
@@ -58,6 +58,7 @@ export function createHeader(): View {
     titleEl.textContent = title;
     subEl.textContent = sub;
     subEl.style.display = s.narrow ? 'none' : '';
+    root.style.paddingLeft = navShellHidden(s) ? '74px' : '30px';
 
     const now = new Date(ctx.now());
     const { hhmm, ss } = clockParts(s, now);
