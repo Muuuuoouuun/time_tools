@@ -69,8 +69,23 @@ location = /timetools/index.html {
 ### 정적 호스팅 (Cloudflare Pages / Netlify / Vercel / S3+CloudFront)
 
 - 퍼블리시 디렉터리: `dist/`
-- 서브패스로 서비스한다면 위 `base` 설정을 맞춘 뒤 빌드
-- 리다이렉트/rewrite 규칙 불필요 (단일 페이지, 클라이언트 라우팅 없음)
+- 서브패스로만 서비스한다면 위 `base` 설정을 맞춘 뒤 빌드
+- 단일 경로로만 서비스할 땐 리다이렉트/rewrite 규칙 불필요 (단일 페이지, 클라이언트 라우팅 없음)
+
+**Vercel에서 root와 서브패스를 동시에 서비스**하려면(예: `classin.cloud/`와 `classin.cloud/time/` 둘 다), `base: './'` 빌드 하나로 `vercel.json`의 rewrite만으로 처리 가능:
+
+```json
+{
+  "redirects": [
+    { "source": "/time", "destination": "/time/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/time/:path*", "destination": "/:path*" }
+  ]
+}
+```
+
+`/time`(슬래시 없음)은 `/time/`으로 308 리다이렉트해 상대 경로 자산이 올바르게 풀리게 하고, `/time/:path*`는 내부적으로 root에 이미 배포된 파일을 그대로 서빙합니다.
 
 ## 4. 동작 특성
 

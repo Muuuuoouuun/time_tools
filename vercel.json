@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/time", "destination": "/time/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/time/:path*", "destination": "/:path*" }
+  ]
+}
