@@ -31,6 +31,7 @@ export const iconClose = (size = 15) => stroke('<path d="M4 4l8 8M12 4l-8 8"/>',
 export const iconCheck = (size = 12, sw = 2) => stroke('<path d="M3 8.5l3.2 3.2L13 4.5"/>', size, sw);
 export const iconChevronLeft = (size = 15) => stroke('<path d="M10 3L5 8l5 5"/>', size, 1.6);
 export const iconChevronRight = (size = 15) => stroke('<path d="M6 3l5 5-5 5"/>', size, 1.6);
+export const iconMenu = (size = 15) => stroke('<path d="M2.5 5h11M2.5 8h11M2.5 11h11"/>', size);
 export const iconPlus = (size = 20, sw = 1.6) => stroke('<path d="M8 3.5v9M3.5 8h9"/>', size, sw);
 export const iconEdit = (size = 14) => stroke('<path d="M11 2.5l2.5 2.5L6 12.5 3 13l.5-3z"/>', size);
 export const iconUpload = (size = 16) => stroke('<path d="M8 11V3M5 6l3-3 3 3"/><path d="M3 11v2h10v-2"/>', size);
