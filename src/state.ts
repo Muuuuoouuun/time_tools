@@ -441,7 +441,7 @@ export function initialState(): AppState {
   };
 }
 
-// Fields persisted to localStorage. Session-only: narrow, settingsOpen, examEdit, sw.
+// Fields persisted to localStorage. Session-only: narrow, settingsOpen, examEdit, sw, navMobileOpen.
 const PERSIST_KEYS: (keyof AppState)[] = [
   'tool', 'theme', 'navState', 'volume', 'sound', 'flash', 'clockFormat',
   'nextId', 'nextPid', 'focusId', 'customName', 'customData', 'timers', 'periods', 'pomo',
