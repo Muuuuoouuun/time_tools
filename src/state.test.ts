@@ -7,6 +7,7 @@ import {
   advancePomo, adjustPomo, pomoToggle, pomoReset,
   zoneOffsetLabel,
   serialize, hydrate, initialState,
+  nextNavState, navShellHidden,
   type Timer, type Pomo, type Sw, type Period,
 } from './state';
 
@@ -260,5 +261,22 @@ describe('persistence', () => {
     s.sw = { running: true, startedAt: 5, acc: 999, laps: [1, 2] };
     const back = hydrate(serialize(s));
     expect(back.sw).toEqual({ running: false, startedAt: 0, acc: 0, laps: [] });
+  });
+});
+
+describe('nav shell state', () => {
+  it('nextNavState cycles expanded -> rail -> hidden -> expanded', () => {
+    expect(nextNavState('expanded')).toBe('rail');
+    expect(nextNavState('rail')).toBe('hidden');
+    expect(nextNavState('hidden')).toBe('expanded');
+  });
+  it('navShellHidden is true on desktop only when fully hidden', () => {
+    expect(navShellHidden({ narrow: false, navMobileOpen: false, navState: 'expanded' })).toBe(false);
+    expect(navShellHidden({ narrow: false, navMobileOpen: false, navState: 'rail' })).toBe(false);
+    expect(navShellHidden({ narrow: false, navMobileOpen: true, navState: 'hidden' })).toBe(true);
+  });
+  it('navShellHidden is true on mobile only when the drawer is closed', () => {
+    expect(navShellHidden({ narrow: true, navMobileOpen: false, navState: 'expanded' })).toBe(true);
+    expect(navShellHidden({ narrow: true, navMobileOpen: true, navState: 'expanded' })).toBe(false);
   });
 });

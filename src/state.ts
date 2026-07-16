@@ -8,6 +8,7 @@
 
 export type Tool = 'timer' | 'stopwatch' | 'clock' | 'exam' | 'pomo';
 export type ClockFormat = '24' | '12';
+export type NavState = 'expanded' | 'rail' | 'hidden';
 
 export interface Timer {
   id: number;
@@ -51,7 +52,8 @@ export interface AppState {
   tool: Tool;
   theme: 'dark' | 'light';
   settingsOpen: boolean;
-  navCollapsed: boolean;
+  navState: NavState;
+  navMobileOpen: boolean;
   narrow: boolean;
   volume: number;   // 0..100
   sound: string;    // default alarm sound id
@@ -399,6 +401,20 @@ export function zoneOffsetLabel(diffMin: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Sidebar responsive state
+// ---------------------------------------------------------------------------
+
+/** Cycles the desktop sidebar through expanded -> rail -> hidden -> expanded. */
+export function nextNavState(s: NavState): NavState {
+  return s === 'expanded' ? 'rail' : s === 'rail' ? 'hidden' : 'expanded';
+}
+
+/** Whether the shell's floating "open sidebar" button should show. */
+export function navShellHidden(s: Pick<AppState, 'narrow' | 'navMobileOpen' | 'navState'>): boolean {
+  return s.narrow ? !s.navMobileOpen : s.navState === 'hidden';
+}
+
+// ---------------------------------------------------------------------------
 // Persistence
 // ---------------------------------------------------------------------------
 
@@ -406,7 +422,7 @@ export const STORAGE_KEY = 'timetools:v1';
 
 export function initialState(): AppState {
   return {
-    tool: 'timer', theme: 'dark', settingsOpen: false, navCollapsed: false, narrow: false,
+    tool: 'timer', theme: 'dark', settingsOpen: false, navState: 'expanded', navMobileOpen: false, narrow: false,
     volume: 70, sound: 'chime', flash: true, examEdit: false, clockFormat: '24',
     nextId: 4, nextPid: 100, focusId: 1, customName: null, customData: null,
     timers: [
@@ -427,7 +443,7 @@ export function initialState(): AppState {
 
 // Fields persisted to localStorage. Session-only: narrow, settingsOpen, examEdit, sw.
 const PERSIST_KEYS: (keyof AppState)[] = [
-  'tool', 'theme', 'navCollapsed', 'volume', 'sound', 'flash', 'clockFormat',
+  'tool', 'theme', 'navState', 'volume', 'sound', 'flash', 'clockFormat',
   'nextId', 'nextPid', 'focusId', 'customName', 'customData', 'timers', 'periods', 'pomo',
 ];
 
@@ -465,7 +481,7 @@ export function hydrate(json: string | null, now: number = Date.now()): AppState
   } catch {
     return base;
   }
-  const s: AppState = { ...base, ...parsed, settingsOpen: false, examEdit: false, narrow: false, sw: swReset() };
+  const s: AppState = { ...base, ...parsed, settingsOpen: false, examEdit: false, narrow: false, navMobileOpen: false, sw: swReset() };
   if (!Array.isArray(s.timers) || s.timers.length === 0) s.timers = base.timers;
   if (!Array.isArray(s.periods)) s.periods = base.periods;
   s.timers = s.timers.map((t) => reconcileTimer(t, now));
