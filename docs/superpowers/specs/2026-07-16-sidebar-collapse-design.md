@@ -9,6 +9,14 @@
 
 요청: 데스크톱에서도 사이드바를 완전히 숨길 수 있게 하고(0px), 모바일도 토글 가능하게 반응형을 정리한다.
 
+## 곁다리 버그 수정: 접힘 상태 하단 버튼 아이콘 사라짐
+
+작업 중 브라우저로 재현해 확인한 기존 버그. 사이드바가 접힘(rail) 상태일 때 하단의 테마 전환/알림 설정 버튼 아이콘이 안 보인다 (버튼 자체는 패딩만큼의 빈 사각형으로 남음).
+
+- 원인: 두 버튼 모두 아이콘 SVG를 버튼(`display:flex`)의 직계 자식으로 둔다. 버튼 폭이 콘텐츠 크기에 의존하는 스타일(`width:auto`, `flex:none` — 정확히 접힘 상태에서 쓰이는 값)이 되면, 감싸지 않은 `<svg>` 하나만으로는 flex 콘텐츠 크기 계산이 0으로 무너져 아이콘이 사라진다. 펼침 상태에서는 두 버튼 모두 고정 폭(`42px`)이거나 `flex:1`(사용 가능한 공간 분배)이라 콘텐츠 크기에 의존하지 않아 우연히 문제가 드러나지 않았다.
+- 같은 파일의 네비게이션 버튼은 이미 아이콘을 `el('span', { style: 'display:flex' }, [...])`로 감싸서 이 문제를 피하고 있음 — 하단 두 버튼도 동일하게 감싼다.
+- 실제 실행 중인 앱에서 span 래핑을 적용해 아이콘이 정상 표시되는 것을 확인함(임시 패치, 소스는 아직 미수정).
+
 ## 상태 모델
 
 [state.ts](../../../src/state.ts)의 `AppState`를 다음과 같이 바꾼다.
@@ -76,7 +84,7 @@ export function navShellHidden(s: Pick<AppState, 'narrow' | 'navMobileOpen' | 'n
 | [state.ts](../../../src/state.ts) | `navCollapsed→navState` 타입 교체, `navMobileOpen` 추가, `nextNavState`/`navShellHidden` 헬퍼, `PERSIST_KEYS`/`initialState`/`hydrate` 갱신 |
 | [state.test.ts](../../../src/state.test.ts) | `nextNavState`, `navShellHidden` 테스트 추가 |
 | [icons.ts](../../../src/icons.ts) | `iconMenu` 추가 |
-| [sidebar.ts](../../../src/views/sidebar.ts) | 3단계 폭 렌더링, 레일 버튼 용도 변경, 모바일 오버레이(backdrop+패널) 렌더링 |
+| [sidebar.ts](../../../src/views/sidebar.ts) | 3단계 폭 렌더링, 레일 버튼 용도 변경, 모바일 오버레이(backdrop+패널) 렌더링, 하단 버튼 아이콘을 `span display:flex`로 감싸는 버그 수정 |
 | [header.ts](../../../src/views/header.ts) | `navShellHidden`일 때 좌측 패딩 보정 |
 | [main.ts](../../../src/main.ts) | 플로팅 버튼 엘리먼트 생성/표시 로직, `setState`의 sidebar rebuild 트리거 조건에 `navState`/`navMobileOpen` 추가, 리사이즈 시 데스크톱 전환되면 `navMobileOpen` 리셋 |
 | [styles.css](../../../src/styles.css) | 모바일 패널 슬라이드인 `@keyframes` 추가 |
@@ -84,7 +92,7 @@ export function navShellHidden(s: Pick<AppState, 'narrow' | 'navMobileOpen' | 'n
 ## 테스트
 
 - `state.test.ts`: `nextNavState`가 세 상태를 올바른 순서로 순환하는지, `navShellHidden`이 narrow/데스크톱 각 조합에서 올바른 불리언을 내는지
-- 브라우저 수동 확인(계획 실행 단계에서): 데스크톱 3단계 순환 클릭, 완전 숨김 상태에서 플로팅 버튼으로 복귀, 리사이즈로 모바일 전환, 모바일 햄버거→오버레이 열림→배경 클릭/항목 선택으로 닫힘, 라이트/다크 테마 모두
+- 브라우저 수동 확인(계획 실행 단계에서): 데스크톱 3단계 순환 클릭, 완전 숨김 상태에서 플로팅 버튼으로 복귀, 리사이즈로 모바일 전환, 모바일 햄버거→오버레이 열림→배경 클릭/항목 선택으로 닫힘, 라이트/다크 테마 모두, 접힘(rail) 상태에서 하단 두 버튼 아이콘이 보이는지
 
 ## 범위 밖
 
