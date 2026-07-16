@@ -80,12 +80,13 @@ location = /timetools/index.html {
     { "source": "/time", "destination": "/time/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/time/:path*", "destination": "/:path*" }
+    { "source": "/time/", "destination": "/index.html" },
+    { "source": "/time/:path+", "destination": "/:path+" }
   ]
 }
 ```
 
-`/time`(슬래시 없음)은 `/time/`으로 308 리다이렉트해 상대 경로 자산이 올바르게 풀리게 하고, `/time/:path*`는 내부적으로 root에 이미 배포된 파일을 그대로 서빙합니다.
+`/time`(슬래시 없음)은 `/time/`으로 308 리다이렉트해 상대 경로 자산이 올바르게 풀리게 합니다. `/time/`은 `/index.html`로 명시적으로 매핑하고(`:path*`가 빈 값일 때 `/`로 치환되면 Vercel이 index.html로 자동 매핑해주지 않아 404가 남), 그 아래 경로는 `/time/:path+`가 root에 이미 배포된 파일을 그대로 서빙합니다.
 
 ## 4. 동작 특성
 
