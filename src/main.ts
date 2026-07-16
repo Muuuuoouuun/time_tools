@@ -1,8 +1,9 @@
 import './styles.css';
 import { el, clear } from './dom';
 import { AudioEngine } from './audio';
+import { iconMenu } from './icons';
 import {
-  hydrate, loadKey, saveKey, serialize, advancePomo,
+  hydrate, loadKey, saveKey, serialize, advancePomo, navShellHidden,
   type AppState, type Tool,
 } from './state';
 import type { Ctx, RenderOpts, View } from './view';
@@ -27,6 +28,7 @@ class App {
   private bodyEl!: HTMLDivElement;
   private settingsHost!: HTMLDivElement;
   private flashEl!: HTMLDivElement;
+  private revealBtn!: HTMLButtonElement;
 
   private views: Record<Tool, View>;
   private sidebar = createSidebar();
@@ -70,11 +72,18 @@ class App {
     this.headerEl = el('header');
     this.bodyEl = el('div', { class: 'sc', style: 'flex:1;overflow-y:auto;padding:28px 30px 40px' });
     this.settingsHost = el('div');
+    this.revealBtn = el('button', {
+      title: '사이드바 열기', class: 'h-surface',
+      style: 'position:absolute;left:14px;top:18px;width:32px;height:32px;border-radius:9px;' +
+        'background:var(--surface);border:1px solid var(--border);color:var(--muted);' +
+        'display:none;align-items:center;justify-content:center;cursor:pointer;z-index:40',
+      onclick: () => this.onRevealClick(),
+    }, [iconMenu()]);
     const mainEl = el('main', { style: 'flex:1;display:flex;flex-direction:column;min-width:0' }, [this.headerEl, this.bodyEl]);
 
     this.rootEl = el('div', {
       style: "position:fixed;inset:0;display:flex;background:var(--bg);color:var(--text);font-family:'Sora',system-ui,sans-serif;overflow:hidden",
-    }, [this.flashEl, this.asideEl, mainEl, this.settingsHost]);
+    }, [this.flashEl, this.asideEl, mainEl, this.settingsHost, this.revealBtn]);
     this.rootEl.setAttribute('data-theme', this.state.theme);
 
     clear(mount);
@@ -82,6 +91,11 @@ class App {
 
     this.sidebar.build(this.asideEl, this.ctx());
     this.header.build(this.headerEl, this.ctx());
+  }
+
+  private onRevealClick(): void {
+    if (this.state.narrow) this.setState({ navMobileOpen: true });
+    else this.setState({ navState: 'expanded' });
   }
 
   private mountTool(): void {
@@ -96,7 +110,8 @@ class App {
 
   setState(patch: Partial<AppState>, opts?: RenderOpts): void {
     const prevTool = this.state.tool;
-    const prevCollapsed = this.state.navCollapsed;
+    const prevNavState = this.state.navState;
+    const prevMobileOpen = this.state.navMobileOpen;
     const prevNarrow = this.state.narrow;
     const prevSettings = this.state.settingsOpen;
     const prevTheme = this.state.theme;
@@ -108,9 +123,9 @@ class App {
     if (this.state.tool !== prevTool) this.mountTool();
     else if (opts?.main) this.current.rebuild(this.ctx());
 
-    // Theme swaps the sidebar's sun/moon icon + label; collapse/narrow change its layout.
-    if (this.state.navCollapsed !== prevCollapsed || this.state.narrow !== prevNarrow ||
-        this.state.theme !== prevTheme || opts?.sidebar) {
+    // Theme swaps the sidebar's sun/moon icon + label; nav state/narrow/mobile-open change its layout.
+    if (this.state.navState !== prevNavState || this.state.navMobileOpen !== prevMobileOpen ||
+        this.state.narrow !== prevNarrow || this.state.theme !== prevTheme || opts?.sidebar) {
       this.sidebar.rebuild(this.ctx());
     }
 
@@ -124,6 +139,7 @@ class App {
     const ctx = this.ctx();
     this.header.update(ctx);
     this.sidebar.update(ctx);
+    this.revealBtn.style.display = navShellHidden(this.state) ? 'flex' : 'none';
     this.current.update(ctx);
     if (this.state.settingsOpen) this.settings.update(ctx);
     const flashing = this.state.flash && (this.state.timers.some((t) => t.done) || this.state.pomo.done);
@@ -161,7 +177,9 @@ class App {
 
     window.addEventListener('resize', () => {
       const narrow = window.innerWidth < NARROW;
-      if (narrow !== this.state.narrow) this.setState({ narrow });
+      if (narrow !== this.state.narrow) {
+        this.setState(narrow ? { narrow } : { narrow, navMobileOpen: false });
+      }
     });
 
     document.addEventListener('visibilitychange', () => {
