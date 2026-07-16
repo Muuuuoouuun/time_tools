@@ -22,11 +22,12 @@ dist/
 
 ## 2. 경로(base) 설정
 
-앱은 `classin.cloud/timetools`에서 서비스되는 것을 전제로, 모든 자산 URL이 `/timetools/`로 시작하도록 빌드됩니다 (`vite.config.ts`의 `base: '/timetools/'`).
+`vite.config.ts`의 `base: './'` (상대 경로)로 빌드됩니다. 자산이 `index.html` **기준 상대 경로**로 로드되므로, 하나의 빌드가 **루트**와 **서브패스** 양쪽에서 동작합니다. 이 앱은 클라이언트 라우팅이 없어 상대 경로가 안전합니다.
 
-**다른 경로로 바꾸려면** `vite.config.ts`의 `base` 한 줄만 고치고 다시 빌드하세요.
-- 예: 루트(`classin.cloud/`)에 올리려면 `base: '/'`
-- 예: 다른 서브패스(`/tools/timer/`)면 `base: '/tools/timer/'`
+- **루트 배포** (예: `time-tools.vercel.app/`, `classin.cloud/`) — 그대로 동작.
+- **서브패스 배포** (예: `classin.cloud/timetools/`) — **끝에 슬래시를 붙여** 서비스해야 합니다. `/timetools`(슬래시 없음)로 접근하면 `./assets/`가 `/assets/`로 잘못 풀립니다 → 아래 nginx 설정에 `/timetools` → `/timetools/` 리다이렉트를 넣으세요.
+
+> 절대 경로가 필요하면(예: 특정 서브패스 고정) `base: '/timetools/'`로 바꿔 빌드할 수 있지만, 그 빌드는 루트에서는 동작하지 않습니다.
 
 ## 3. 서버별 배치
 
@@ -35,6 +36,9 @@ dist/
 `dist/`의 내용을 예컨대 `/var/www/timetools/`에 복사한 뒤:
 
 ```nginx
+# 슬래시 없는 접근을 슬래시 붙은 경로로 (상대 경로 자산 해결에 필요)
+location = /timetools { return 301 /timetools/; }
+
 # 앱 셸 — SPA지만 라우팅이 없으므로 index.html만 서빙하면 충분
 location /timetools/ {
     alias /var/www/timetools/;
