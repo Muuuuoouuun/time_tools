@@ -15,7 +15,7 @@ function filled(inner: string, size: number, vb = '0 0 24 24'): SVGSVGElement {
 }
 
 // ---- Nav icons (17px, from prototype lines 421–427) ----
-export const navTimer = () => stroke('<circle cx="8" cy="9.3" r="4.7"/><path d="M8 9.3V6.3M6.2 1.6h3.6M12.2 4.3l.9.9"/>', 17);
+export const navTimer = () => stroke('<circle cx="8" cy="8" r="6"/><path d="M8 8V3.9A4.1 4.1 0 0 1 11.55 10.05Z" fill="currentColor" stroke="none"/>', 17);
 export const navStopwatch = () => stroke('<circle cx="8" cy="9" r="5"/><path d="M8 9l2-1.4M6.4 1.6h3.2M8 1.6v1.9"/>', 17);
 export const navClock = () => stroke('<circle cx="8" cy="8" r="6"/><path d="M8 4.6V8l2.6 1.5"/>', 17);
 export const navExam = () => stroke('<rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M5 6h6M5 9h6M5 11.6h3.4"/>', 17);
