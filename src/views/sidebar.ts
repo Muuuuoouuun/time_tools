@@ -61,6 +61,8 @@ export function createSidebar(): View {
       style: 'position:fixed;inset:0;background:rgba(0,0,0,.4);backdrop-filter:blur(3px);z-index:45',
       onclick: () => ctx.setState({ navMobileOpen: false }),
     });
+    // backdrop and panel are siblings (unlike settings.ts's nested drawer) — panel's
+    // higher z-index keeps clicks on it from ever reaching the backdrop's close handler.
     const panel = el('div', {
       class: 'sc',
       style: 'position:fixed;left:0;top:0;bottom:0;width:216px;background:var(--bg-2);' +
